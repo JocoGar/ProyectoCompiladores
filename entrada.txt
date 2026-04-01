@@ -1,0 +1,5 @@
+empty raiz abre cierra contiene
+    num x asigna 5 hecho
+    proyectar abre cadena Hola fin_cadena cierra hecho
+    x asigna 3 une hecho
+listo
