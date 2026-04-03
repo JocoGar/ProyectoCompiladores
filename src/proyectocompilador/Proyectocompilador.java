@@ -3,6 +3,7 @@ package proyectocompilador;
 import org.antlr.v4.runtime.*;
 import java.util.ArrayList;
 import java.io.File;
+import proyectocompilador.TablaSimbolos.AnalizadorSemantico;
 
 
 public class Proyectocompilador {
@@ -55,31 +56,43 @@ for (Token t : tokens.getTokens()) {
 }
 
 // 4. Análisis sintáctico
-GramaticaParser parser = new GramaticaParser(tokens);
+            GramaticaParser parser = new GramaticaParser(tokens);
             parser.removeErrorListeners();
             parser.addErrorListener(errorCollector);
 
-            // Iniciar desde la regla principal
-            parser.programa();
+            org.antlr.v4.runtime.tree.ParseTree tree = parser.programa();
 
-            // 5. Generar reportes HTML
+            // 5. Análisis Semántico (Llenado de Tabla de Símbolos)
+            org.antlr.v4.runtime.tree.ParseTreeWalker walker = new org.antlr.v4.runtime.tree.ParseTreeWalker();
+            AnalizadorSemantico analizadorSemantico = new AnalizadorSemantico(errorCollector);
+            walker.walk(analizadorSemantico, tree); 
+
+            // 6. Generar reportes HTML
             ReporteGenerator.generarHTML(
-    "BitacoraTokens",
-    "Reporte de Tokens",
-    "<th>Lexema</th><th>Token</th><th>Categoría</th><th>Línea</th><th>Columna</th>",
-    filasTokens
-);
+                "BitacoraTokens",
+                "Reporte de Tokens",
+                "<th>Lexema</th><th>Token</th><th>Categoría</th><th>Línea</th><th>Columna</th>",
+                filasTokens
+            );
 
             ReporteGenerator.generarHTML(
-    "BitacoraErrores",
-    "Reporte de Errores",
-    "<th>Tipo</th><th>Línea</th><th>Columna</th><th>Lexema</th><th>Mensaje</th>",
-    errorCollector.errores
-);
+                "TablaDeSimbolos",
+                "Tabla de Símbolos",
+                "<th>Nombre</th><th>Tipo</th><th>Ámbito</th><th>Línea</th><th>Columna</th>",
+                analizadorSemantico.tablaSimbolos.obtenerFilasHTML()
+            );
+
+            ReporteGenerator.generarHTML(
+                "BitacoraErrores",
+                "Reporte de Errores",
+                "<th>Tipo</th><th>Línea</th><th>Columna</th><th>Lexema</th><th>Mensaje</th>",
+                errorCollector.errores
+            );
 
             System.out.println("-------------------------------------------------------");
             System.out.println("Proceso finalizado con exito");
             System.out.println("- Se genero: BitacoraTokens.html");
+            System.out.println("- Se genero: TablaDeSimbolos.html");
             System.out.println("- Se genero: BitacoraErrores.html");
             System.out.println("-------------------------------------------------------");
 
