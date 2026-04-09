@@ -13,7 +13,8 @@ import java.util.ArrayList;
 
 public class ErrorCollector extends BaseErrorListener {
     public ArrayList<String> errores = new ArrayList<>();
-
+    public ArrayList<Object[]> erroresPuros=new ArrayList<>();
+    
     @Override
     public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol,
                             int line, int charPositionInLine, String msg, RecognitionException e) {
@@ -34,6 +35,9 @@ public class ErrorCollector extends BaseErrorListener {
             "<td>" + escaparHTML(msg) + "</td>" +
             "</tr>"
         );
+        //[INICIO][9/4/2026][Rodrigo Juárez][creacion de la lista llamada "erroresPuros" para que sea más fácil llenar el jtable del Formulario "VistaPrincipal"]
+        erroresPuros.add(new Object[]{tipoError, line, charPositionInLine, lexema, msg});
+        //[FINAL][9/4/2026][Rodrigo Juárez][creacion de la lista llamada "erroresPuros" para que sea más fácil llenar el jtable del Formulario "VistaPrincipal"]
     }
 
     private String escaparHTML(String texto) {
