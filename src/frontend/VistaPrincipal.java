@@ -4,6 +4,14 @@
  */
 package frontend;
 
+import com.formdev.flatlaf.FlatDarkLaf;
+import java.util.ArrayList;
+import javax.swing.UIManager;
+import proyectocompilador.ErrorCollector;
+import proyectocompilador.GramaticaLexer;
+import proyectocompilador.GramaticaParser;
+import proyectocompilador.ReporteGenerator;
+
 /**
  *
  * @author roood
@@ -27,23 +35,24 @@ public class VistaPrincipal extends javax.swing.JFrame {
     private void initComponents() {
 
         jScrollPane1 = new javax.swing.JScrollPane();
-        jScrollPane2 = new javax.swing.JScrollPane();
-        txtCodigo = new javax.swing.JTextArea();
         btnCompilar = new javax.swing.JButton();
         jScrollPane3 = new javax.swing.JScrollPane();
         tablaTokens = new javax.swing.JTable();
         jScrollPane4 = new javax.swing.JScrollPane();
-        jTable1 = new javax.swing.JTable();
+        tablaErrores = new javax.swing.JTable();
+        jScrollPane2 = new javax.swing.JScrollPane();
+        txtCodigo = new javax.swing.JTextArea();
+        btnGenerarHTML = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
-        txtCodigo.setColumns(20);
-        txtCodigo.setRows(5);
-        jScrollPane2.setViewportView(txtCodigo);
-
-        jScrollPane1.setViewportView(jScrollPane2);
-
+        btnCompilar.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         btnCompilar.setText("Compilar");
+        btnCompilar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnCompilarActionPerformed(evt);
+            }
+        });
 
         tablaTokens.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -58,7 +67,7 @@ public class VistaPrincipal extends javax.swing.JFrame {
         ));
         jScrollPane3.setViewportView(tablaTokens);
 
-        jTable1.setModel(new javax.swing.table.DefaultTableModel(
+        tablaErrores.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
                 {null, null, null, null},
                 {null, null, null, null},
@@ -69,46 +78,172 @@ public class VistaPrincipal extends javax.swing.JFrame {
                 "Title 1", "Title 2", "Title 3", "Title 4"
             }
         ));
-        jScrollPane4.setViewportView(jTable1);
+        jScrollPane4.setViewportView(tablaErrores);
+
+        txtCodigo.setColumns(20);
+        txtCodigo.setRows(5);
+        jScrollPane2.setViewportView(txtCodigo);
+
+        btnGenerarHTML.setText("Generar HTML");
+        btnGenerarHTML.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnGenerarHTMLActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addGroup(layout.createSequentialGroup()
-                        .addGap(58, 58, 58)
-                        .addComponent(btnCompilar, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 14, Short.MAX_VALUE)
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 300, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
-                .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 300, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(106, 106, 106)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(btnCompilar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(btnGenerarHTML, javax.swing.GroupLayout.DEFAULT_SIZE, 120, Short.MAX_VALUE))
+                        .addGap(114, 114, 114))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addContainerGap()
+                        .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 333, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(3, 3, 3)))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPane4, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 730, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 730, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 280, Short.MAX_VALUE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(btnCompilar, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
-                .addContainerGap(74, Short.MAX_VALUE))
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 280, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addGroup(layout.createSequentialGroup()
+                                .addGap(84, 84, 84)
+                                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 280, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 370, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(18, 18, 18)
+                        .addComponent(btnCompilar, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(btnGenerarHTML)))
+                .addContainerGap(22, Short.MAX_VALUE))
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    private void btnCompilarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCompilarActionPerformed
+        String codigoFuente= txtCodigo.getText();
+        
+        if (codigoFuente.trim().isEmpty()){
+            javax.swing.JOptionPane.showMessageDialog(this, "Por favor, ingresar código para compilar");
+            return;
+        }
+        try {
+        org.antlr.v4.runtime.CharStream input = org.antlr.v4.runtime.CharStreams.fromString(codigoFuente);
+        
+        GramaticaLexer lexer = new GramaticaLexer(input);
+        ErrorCollector errorCollector = new ErrorCollector();
+
+        lexer.removeErrorListeners();
+        lexer.addErrorListener(errorCollector);
+
+        org.antlr.v4.runtime.CommonTokenStream tokens = new org.antlr.v4.runtime.CommonTokenStream(lexer);
+        tokens.fill(); 
+
+        javax.swing.table.DefaultTableModel modeloTokens = new javax.swing.table.DefaultTableModel(
+            new Object [][] {},
+            new String [] {"Lexema", "Token", "Categoría", "Línea", "Columna"}
+        );
+        ArrayList<String> filasTokensHTML = new ArrayList<>();
+
+        for (org.antlr.v4.runtime.Token t : tokens.getTokens()) {
+            if (t.getType() != org.antlr.v4.runtime.Token.EOF) {
+                String nombreToken = GramaticaLexer.VOCABULARY.getSymbolicName(t.getType());
+                String categoria = identificarCategoria(nombreToken); 
+ 
+                modeloTokens.addRow(new Object[]{
+                    t.getText(), nombreToken, categoria, t.getLine(), t.getCharPositionInLine()
+                });
+ 
+                filasTokensHTML.add(
+                    "<tr>" +
+                    "<td>" + escaparHTML(t.getText()) + "</td>" +
+                    "<td>" + nombreToken + "</td>" +
+                    "<td>" + categoria + "</td>" + 
+                    "<td>" + t.getLine() + "</td>" +
+                    "<td>" + t.getCharPositionInLine() + "</td>" +
+                    "</tr>"
+                );
+            }
+        }
+        tablaTokens.setModel(modeloTokens);
+
+        GramaticaParser parser = new GramaticaParser(tokens);
+        parser.removeErrorListeners();
+        parser.addErrorListener(errorCollector);
+        parser.programa();
+
+        javax.swing.table.DefaultTableModel modeloErrores = new javax.swing.table.DefaultTableModel(
+            new Object [][] {},
+            new String [] {"Tipo", "Línea", "Columna", "Lexema", "Mensaje"}
+        );
+
+        for (Object[] error : errorCollector.erroresPuros) {
+            modeloErrores.addRow(error);
+        }
+        tablaErrores.setModel(modeloErrores);
+
+        ReporteGenerator.generarHTML(
+            "BitacoraTokens",
+            "Reporte de Tokens",
+            "<th>Lexema</th><th>Token</th><th>Categoría</th><th>Línea</th><th>Columna</th>",
+            filasTokensHTML
+        );
+
+        ReporteGenerator.generarHTML(
+            "BitacoraErrores",
+            "Reporte de Errores",
+            "<th>Tipo</th><th>Línea</th><th>Columna</th><th>Lexema</th><th>Mensaje</th>",
+            errorCollector.errores 
+        );
+
+        javax.swing.JOptionPane.showMessageDialog(this, 
+            "Análisis completado.\nSe actualizaron las tablas y se generaron los reportes HTML.", 
+            "Éxito", 
+            javax.swing.JOptionPane.INFORMATION_MESSAGE);
+
+    } catch (Exception e) {
+        javax.swing.JOptionPane.showMessageDialog(this, "Error crítico: " + e.getMessage(), "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
+        e.printStackTrace();
+    }
+
+        
+    }//GEN-LAST:event_btnCompilarActionPerformed
+
+    private void btnGenerarHTMLActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGenerarHTMLActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnGenerarHTMLActionPerformed
+
     /**
      * @param args the command line arguments
      */
     public static void main(String args[]) {
+        //[INICIO][9/4/2026][Rodrigo Juárez][Implementación de FlatLaf en su Tema DARK]
+        try {
+    UIManager.setLookAndFeel( new FlatDarkLaf() );
+} catch( Exception ex ) {
+    System.err.println( "Failed to initialize LaF" );
+}
+        //[FINAL][9/4/2026][Rodrigo Juárez][Implementación de FlatLaf en su Tema DARK]     
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
         /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
@@ -134,20 +269,81 @@ public class VistaPrincipal extends javax.swing.JFrame {
 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
+            
             public void run() {
+                
                 new VistaPrincipal().setVisible(true);
+                
             }
         });
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnCompilar;
+    private javax.swing.JButton btnGenerarHTML;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JScrollPane jScrollPane4;
-    private javax.swing.JTable jTable1;
+    private javax.swing.JTable tablaErrores;
     private javax.swing.JTable tablaTokens;
     private javax.swing.JTextArea txtCodigo;
     // End of variables declaration//GEN-END:variables
+        private String identificarCategoria(String nombreToken) {
+        if (nombreToken == null) return "Desconocido";
+
+        switch (nombreToken) {
+            case "PAL_NUMERO": case "PAL_REAL": case "PAL_PRECISO": 
+            case "PAL_SIGNO": case "PAL_TEXTO": case "PAL_ESTADO": 
+            case "PAL_VACIO":
+                return "Tipo de Dato";
+            case "PAL_VALIDAR": case "PAL_ALTERNO": case "PAL_SIGUIENTE":
+            case "PAL_REPETIR": case "PAL_INICIAR": case "PAL_LOOP": 
+                return "Estructura de Control";
+            case "PAL_PROYECTAR": case "PAL_CAPTAR": 
+            case "PAL_DAR": case "PAL_RAIZ":
+            case "PAL_PARAR": case "PAL_SALTAR":
+            case "PAL_ASIGNA":
+                return "Palabra Reservada";
+            case "PAL_UNE": case "PAL_VECES": case "PAL_QUITA": 
+            case "PAL_REPARTE": case "PAL_SOBRA":
+                return "Operador Aritmético";
+            case "PAL_SUPERA": case "PAL_BAJO": case "PAL_MINIMO": 
+            case "PAL_TOPE": case "PAL_CALCA": case "PAL_AJENO":
+                return "Operador Relacional";
+            case "PAL_VINCULO": case "PAL_OPCION": case "PAL_OPUESTO":
+                return "Operador Lógico";
+            case "PAL_SUBIR": case "PAL_BAJAR":
+                return "Incremento/Decremento";
+            case "CONTIENE": case "LISTO": case "HECHO": 
+            case "ABRE": case "CIERRA": case "SEPARA":
+                return "Símbolo/Delimitador";
+            case "NUMERO":
+                return "Literal Numérico";
+            case "PAL_VERDAD": case "PAL_MENTIRA":
+                return "Literal Booleano";
+            case "IDENTIFICADOR":
+                return "Identificador";
+            case "CADENA_INICIO": case "CADENA_CIERRA":
+                return "Delimitador de Cadena";
+            case "TEXTO_CADENA":
+                return "Contenido de Cadena";
+            case "COMENTARIO_LINEA": case "COMENTARIO_BLOQUE":
+                return "Comentario";
+            default:
+                return "Otros";
+        }
+    }
+
+    private String escaparHTML(String texto) {
+        if (texto == null) {
+            return "";
+        }
+        return texto
+                .replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace("\"", "&quot;")
+                .replace("'", "&#39;");
+    }
 }
