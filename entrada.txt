@@ -1,5 +1,48 @@
+nota Prueba robusta para fase uno
+
+num sumatoria abre num a separa num b cierra contiene
+    num r asigna a une b hecho
+    dar r hecho
+listo
+
+num demoErrores abre num n cierra contiene
+    validar abre n supera 0 cierra contiene
+        proyectar abre cadena Positivo fin_cadena cierra hecho
+    listo
+    alterno contiene
+        proyectar abre cadena Cero_o_negativo fin_cadena cierra hecho
+    listo
+    proyectar abre cadena Falta_hecho fin_cadena cierra hecho
+listo
+
 empty raiz abre cierra contiene
-    num x asigna 5 hecho
-    proyectar abre cadena Hola fin_cadena cierra hecho
-    x asigna 3 une hecho
+    num x asigna 4 hecho
+    num y asigna 0 hecho
+    num total hecho
+
+    total asigna sumatoria abre x separa 3 cierra hecho
+
+    validar abre total supera 5 vinculo opuesto mentira cierra contiene
+        proyectar abre cadena Total alto fin_cadena cierra hecho
+    listo
+    alterno contiene
+        proyectar abre cadena Total bajo fin_cadena cierra hecho
+    listo
+
+    repetir abre x bajo 10 cierra contiene
+        x asigna x une 1 hecho
+        x asigna x une 1 hecho
+    listo
+
+    iniciar contiene
+        y asigna 0 hecho
+        y asigna y une 1 hecho
+    listo repetir abre y bajo 2 cierra hecho
+
+    loop abre num i asigna 0 hecho i bajo 3 hecho i subir cierra contiene
+        proyectar abre i cierra hecho
+    listo
+
+    
+    proyectar abre cadena Fin de prueba fin_cadena cierra hecho
 listo
