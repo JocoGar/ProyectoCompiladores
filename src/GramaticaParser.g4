@@ -2,9 +2,6 @@ parser grammar GramaticaParser;
 
 options { tokenVocab=GramaticaLexer; }
 
-/* =========================================================
-   PROGRAMA COMPLETO
-   ========================================================= */
 
 programa
     : seccionGlobales
@@ -31,17 +28,17 @@ comentario
     | COMENTARIO_BLOQUE
     ;
 
-/* =========================================================
+/* 
    BLOQUE DE GLOBALES
-   ========================================================= */
+  */
 
 declaracionGlobal
     : declaracionVariable
     ;
 
-/* =========================================================
+/* 
    BLOQUE DE FUNCIONES
-   ========================================================= */
+ */
 
 declaracionFuncion
     : tipoRetorno IDENTIFICADOR ABRE parametros? CIERRA CONTIENE bloque LISTO
@@ -55,17 +52,17 @@ parametro
     : tipoVariable IDENTIFICADOR
     ;
 
-/* =========================================================
+/* 
    RAÍZ DEL PROGRAMA
-   ========================================================= */
+ */
 
 bloquePrincipal
     : PAL_VACIO PAL_RAIZ ABRE CIERRA CONTIENE bloque LISTO
     ;
 
-/* =========================================================
+/*
    BLOQUES E INSTRUCCIONES
-   ========================================================= */
+  */
 
 bloque
     : (comentario | instruccion)*
@@ -93,9 +90,9 @@ asignacion
     : IDENTIFICADOR PAL_ASIGNA expresion
     ;
 
-/* =========================================================
+/* 
    ENTRADA / SALIDA
-   ========================================================= */
+*/
 
 instruccionImprimir
     : PAL_PROYECTAR ABRE expresion CIERRA
@@ -105,9 +102,9 @@ instruccionCaptar
     : PAL_CAPTAR ABRE IDENTIFICADOR CIERRA
     ;
 
-/* =========================================================
+/* 
    CONDICIONALES
-   ========================================================= */
+*/
 
 estructuraCondicional
     : PAL_VALIDAR ABRE expresion CIERRA CONTIENE bloque LISTO
@@ -115,9 +112,9 @@ estructuraCondicional
       (PAL_ALTERNO CONTIENE bloque LISTO)?
     ;
 
-/* =========================================================
+/* 
    CICLOS
-   ========================================================= */
+*/
 
 estructuraMientras
     : PAL_REPETIR ABRE expresion CIERRA CONTIENE bloque LISTO
@@ -154,9 +151,9 @@ actualizacion
     | (PAL_SUBIR | PAL_BAJAR) IDENTIFICADOR
     ;
 
-/* =========================================================
+/* 
    CONTROL DE FLUJO
-   ========================================================= */
+*/
 
 instruccionRetorno
     : PAL_DAR expresion?
@@ -167,9 +164,9 @@ instruccionControlFlujo
     | PAL_SALTAR
     ;
 
-/* =========================================================
+/*
    LLAMADAS A FUNCIÓN
-   ========================================================= */
+*/
 
 llamadaFuncion
     : IDENTIFICADOR ABRE argumentos? CIERRA
@@ -179,9 +176,9 @@ argumentos
     : expresion (SEPARA expresion)*
     ;
 
-/* =========================================================
+/* 
    EXPRESIONES CON PRECEDENCIA
-   ========================================================= */
+ */
 
 expresion
     : expresionLogica
@@ -214,9 +211,9 @@ expresionPrimaria
     | literal
     ;
 
-/* =========================================================
+/* 
    LITERALES Y TIPOS
-   ========================================================= */
+*/
 
 literal
     : IDENTIFICADOR

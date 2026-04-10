@@ -13,7 +13,7 @@ public class Proyectocompilador {
         try {
             File f = new File(archivoEntrada);
             if (!f.exists()) {
-                System.out.println("Error: No se encontró el archivo 'entrada.txt' en: " + f.getAbsolutePath());
+                System.out.println("Error: No se encontro el archivo 'entrada.txt' en: " + f.getAbsolutePath());
                 return;
             }
 
@@ -27,8 +27,7 @@ ErrorCollector errorCollector = new ErrorCollector();
 lexer.removeErrorListeners();
 lexer.addErrorListener(errorCollector);
 
-// IMPORTANTE: CommonTokenStream por defecto ignora canales como los de comentarios o espacios.
-// Como ya pusiste "-> skip" en la gramática, esto está bien.
+
 CommonTokenStream tokens = new CommonTokenStream(lexer);
 
 // 3. Recolectar tokens para la bitácora
@@ -40,13 +39,13 @@ tokens.fill();
 for (Token t : tokens.getTokens()) {
     if (t.getType() != Token.EOF) {
         String nombreToken = GramaticaLexer.VOCABULARY.getSymbolicName(t.getType());
-        String categoria = identificarCategoria(nombreToken); // <--- Nueva función
+        String categoria = identificarCategoria(nombreToken); 
 
         filasTokens.add(
             "<tr>" +
             "<td>" + escaparHTML(t.getText()) + "</td>" +
             "<td>" + nombreToken + "</td>" +
-            "<td>" + categoria + "</td>" + // <--- Añadimos la categoría al HTML
+            "<td>" + categoria + "</td>" +
             "<td>" + t.getLine() + "</td>" +
             "<td>" + t.getCharPositionInLine() + "</td>" +
             "</tr>"
@@ -59,35 +58,54 @@ GramaticaParser parser = new GramaticaParser(tokens);
             parser.removeErrorListeners();
             parser.addErrorListener(errorCollector);
 
-            // Iniciar desde la regla principal
-            parser.programa();
+// modificacion para generar reporte de tokens unicamente cuando no hay error Joaquin Garcia
+    parser.programa();
 
-            // 5. Generar reportes HTML
-            ReporteGenerator.generarHTML(
-    "BitacoraTokens",
-    "Reporte de Tokens",
-    "<th>Lexema</th><th>Token</th><th>Categoría</th><th>Línea</th><th>Columna</th>",
-    filasTokens
-);
+    // 5. Generar reportes HTML
+    ReporteGenerator.generarHTML(
+        "BitacoraErrores",
+        "Reporte de Errores",
+        "<th>Tipo</th><th>Línea</th><th>Columna</th><th>Lexema</th><th>Mensaje</th>",
+        errorCollector.errores
+    );
 
-            ReporteGenerator.generarHTML(
-    "BitacoraErrores",
-    "Reporte de Errores",
-    "<th>Tipo</th><th>Línea</th><th>Columna</th><th>Lexema</th><th>Mensaje</th>",
-    errorCollector.errores
-);
+    System.out.println("-------------------------------------------------------");
+    System.out.println("Proceso finalizado");
 
-            System.out.println("-------------------------------------------------------");
-            System.out.println("Proceso finalizado con exito");
-            System.out.println("- Se genero: BitacoraTokens.html");
-            System.out.println("- Se genero: BitacoraErrores.html");
-            System.out.println("-------------------------------------------------------");
+    // Si NO hubo errores - generar tokens normales
+    if (errorCollector.errores.isEmpty()) {
 
+        ReporteGenerator.generarHTML(
+            "BitacoraTokens",
+            "Reporte de Tokens",
+            "<th>Lexema</th><th>Token</th><th>Categoría</th><th>Línea</th><th>Columna</th>",
+            filasTokens
+        );
+
+        System.out.println("- Se genero: BitacoraTokens.html");
+
+    } else {
+
+        // SI hubo errores → generar el archivo pero vacío
+        ReporteGenerator.generarHTML(
+            "BitacoraTokens",
+            "Reporte de Tokens",
+            "<th>Lexema</th><th>Token</th><th>Categoría</th><th>Línea</th><th>Columna</th>",
+            new ArrayList<>()
+        );
+
+        System.out.println("- BitacoraTokens.html generado vacio por errores");
+    }
+
+System.out.println("- Se genero: BitacoraErrores.html");
+System.out.println("-------------------------------------------------------");
         } catch (Exception e) {
             System.err.println("Error critico durante la ejecucion: " + e.getMessage());
             e.printStackTrace();
         }
     }
+    
+    //finalización de modificacion para generar reporte de tokens unicamente cuando no hay error Joaquin Garcia
     
     private static String identificarCategoria(String nombreToken) {
     if (nombreToken == null) return "Desconocido";
