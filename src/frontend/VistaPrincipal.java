@@ -27,6 +27,20 @@ public class VistaPrincipal extends javax.swing.JFrame {
      */
     public VistaPrincipal() {
         initComponents();
+        try {
+            java.io.File archivoEntrada = new java.io.File("entrada.txt");
+            
+            if (archivoEntrada.exists()) {
+                // Leemos el contenido y lo ponemos en el área de texto
+                String contenido = new String(java.nio.file.Files.readAllBytes(archivoEntrada.toPath()));
+                txtCodigo.setText(contenido);
+                System.out.println("- Se cargo el archivo entrada.txt al iniciar la aplicacion.");
+            } else {
+                System.out.println("- Aviso: No se encontro entrada.txt en la raiz del proyecto.");
+            }
+        } catch (Exception ex) {
+            System.err.println("Error al intentar cargar entrada.txt al inicio: " + ex.getMessage());
+        }
     }
 
     /**
@@ -214,7 +228,7 @@ public class VistaPrincipal extends javax.swing.JFrame {
                 );
             }
         }
-        tablaTokens.setModel(modeloTokens);
+       
 
         GramaticaParser parser = new GramaticaParser(tokens);
         parser.removeErrorListeners();
@@ -231,48 +245,76 @@ public class VistaPrincipal extends javax.swing.JFrame {
         }
         tablaErrores.setModel(modeloErrores);
 
-        ReporteGenerator.generarHTML(
-            "BitacoraTokens",
-            "Reporte de Tokens",
-            "<th>Lexema</th><th>Token</th><th>Categoría</th><th>Línea</th><th>Columna</th>",
-            filasTokensHTML
-        );
 
-        ReporteGenerator.generarHTML(
-            "BitacoraErrores",
-            "Reporte de Errores",
-            "<th>Tipo</th><th>Línea</th><th>Columna</th><th>Lexema</th><th>Mensaje</th>",
-            errorCollector.errores 
-        );if (errorCollector.errores.isEmpty()) {
+        
+        if (errorCollector.errores.isEmpty()) {
+            
+           
+            tablaTokens.setModel(modeloTokens);
+            
+        
+            ReporteGenerator.generarHTML(
+                "BitacoraTokens",
+                "Reporte de Tokens",
+                "<th>Lexema</th><th>Token</th><th>Categoría</th><th>Línea</th><th>Columna</th>",
+                filasTokensHTML
+            );
 
-        ReporteGenerator.generarHTML(
-            "BitacoraTokens",
-            "Reporte de Tokens",
-            "<th>Lexema</th><th>Token</th><th>Categoría</th><th>Línea</th><th>Columna</th>",
-            filasTokensHTML
-        );
+            
+            ReporteGenerator.generarHTML(
+                "BitacoraErrores",
+                "Reporte de Errores",
+                "<th>Tipo</th><th>Línea</th><th>Columna</th><th>Lexema</th><th>Mensaje</th>",
+                new java.util.ArrayList<>() // Pasamos una lista vacía
+            );
 
-        System.out.println("- Se genero: BitacoraTokens.html");
+            System.out.println("- Se genero: BitacoraTokens.html (lleno) y BitacoraErrores.html (vacio)");
 
-    } else {
+            javax.swing.JOptionPane.showMessageDialog(this, 
+                "Analisis completado exitosamente.\nSe generaron los Tokens.", 
+                "Exito", 
+                javax.swing.JOptionPane.INFORMATION_MESSAGE);
 
-        // SI hubo errores → generar el archivo pero vacío
-        ReporteGenerator.generarHTML(
-            "BitacoraTokens",
-            "Reporte de Tokens",
-            "<th>Lexema</th><th>Token</th><th>Categoría</th><th>Línea</th><th>Columna</th>",
-            new ArrayList<>()
-        );
+        } else {
+            
+            
+            tablaTokens.setModel(new javax.swing.table.DefaultTableModel(
+                new Object [][] {},
+                new String [] {"Lexema", "Token", "Categoría", "Línea", "Columna"}
+            ));
 
-        javax.swing.JOptionPane.showMessageDialog(this, 
-            "Análisis completado.\nSe actualizaron las tablas y se generaron los reportes HTML.", 
-            "Éxito", 
-            javax.swing.JOptionPane.INFORMATION_MESSAGE);
+            
+            ReporteGenerator.generarHTML(
+                "BitacoraErrores",
+                "Reporte de Errores",
+                "<th>Tipo</th><th>Línea</th><th>Columna</th><th>Lexema</th><th>Mensaje</th>",
+                errorCollector.errores 
+            );
+
+            
+            ReporteGenerator.generarHTML(
+                "BitacoraTokens",
+                "Reporte de Tokens",
+                "<th>Lexema</th><th>Token</th><th>Categoría</th><th>Línea</th><th>Columna</th>",
+                new java.util.ArrayList<>() // Pasamos una lista vacía
+            );
+            
+            System.out.println("- Hubo errores. Se genero: BitacoraErrores.html (lleno) y BitacoraTokens.html (vacio)");
+
+            
+            javax.swing.JOptionPane.showMessageDialog(this, 
+                "Análisis completado con errores.\nNo se generaron Tokens.", 
+                "Advertencia", 
+                javax.swing.JOptionPane.WARNING_MESSAGE);
         }
+        
+   
+
     } catch (Exception e) {
         javax.swing.JOptionPane.showMessageDialog(this, "Error crítico: " + e.getMessage(), "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
         e.printStackTrace();
     }
+
 
         
     }//GEN-LAST:event_btnCompilarActionPerformed

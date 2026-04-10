@@ -1,48 +1,70 @@
-nota Prueba robusta para fase uno
+nota prueba corta completa
+apunte comentario de bloque fin_apunte
 
-num sumatoria abre num a separa num b cierra contiene
-    num r asigna a une b hecho
-    dar r hecho
+num gi asigna 1 hecho
+real gr asigna 2.5 hecho
+preciso gp asigna 3.75 hecho
+signo gs asigna 4 hecho
+text gt asigna cadena hola fin_cadena hecho
+estado ge asigna verdad hecho
+
+num suma abre num a separa num b cierra contiene
+    dar a une b quita 1 veces 2 reparte 3 sobra 4 hecho
 listo
 
-num demoErrores abre num n cierra contiene
-    validar abre n supera 0 cierra contiene
-        proyectar abre cadena Positivo fin_cadena cierra hecho
-    listo
-    alterno contiene
-        proyectar abre cadena Cero_o_negativo fin_cadena cierra hecho
-    listo
-    proyectar abre cadena Falta_hecho fin_cadena cierra hecho
+empty mostrar abre text t cierra contiene
+    proyectar abre t cierra hecho
 listo
 
 empty raiz abre cierra contiene
-    num x asigna 4 hecho
-    num y asigna 0 hecho
-    num total hecho
+    captar abre gt cierra hecho
+    num x asigna opuesto 5 hecho
 
-    total asigna sumatoria abre x separa 3 cierra hecho
-
-    validar abre total supera 5 vinculo opuesto mentira cierra contiene
-        proyectar abre cadena Total alto fin_cadena cierra hecho
+    validar abre x supera gi vinculo ge cierra contiene
+        proyectar abre cadena mayor fin_cadena cierra hecho
+    listo
+    siguiente abre x bajo gi cierra contiene
+        proyectar abre cadena menor fin_cadena cierra hecho
+    listo
+    siguiente abre x minimo gi cierra contiene
+        proyectar abre cadena minimo fin_cadena cierra hecho
+    listo
+    siguiente abre x tope gi cierra contiene
+        proyectar abre cadena tope fin_cadena cierra hecho
+    listo
+    siguiente abre x calca gi cierra contiene
+        proyectar abre cadena igual fin_cadena cierra hecho
+    listo
+    siguiente abre x ajeno gi cierra contiene
+        proyectar abre cadena distinto fin_cadena cierra hecho
     listo
     alterno contiene
-        proyectar abre cadena Total bajo fin_cadena cierra hecho
+        proyectar abre cadena otro fin_cadena cierra hecho
+    listo
+
+    validar abre verdad opcion mentira cierra contiene
+        proyectar abre cadena logico fin_cadena cierra hecho
     listo
 
     repetir abre x bajo 10 cierra contiene
-        x asigna x une 1 hecho
-        x asigna x une 1 hecho
+        saltar hecho
+        parar hecho
     listo
 
     iniciar contiene
-        y asigna 0 hecho
-        y asigna y une 1 hecho
-    listo repetir abre y bajo 2 cierra hecho
+        x asigna x une 1 hecho
+    listo repetir abre x bajo 12 cierra hecho
 
     loop abre num i asigna 0 hecho i bajo 3 hecho i subir cierra contiene
         proyectar abre i cierra hecho
     listo
 
-    
-    proyectar abre cadena Fin de prueba fin_cadena cierra hecho
+    loop abre num j asigna 3 hecho j supera 0 hecho bajar j cierra contiene
+        proyectar abre j cierra hecho
+    listo
+
+    suma abre x separa gi cierra hecho
+    mostrar abre gt cierra hecho
 listo
+
+apunte fin fin_apunte

@@ -58,7 +58,7 @@ GramaticaParser parser = new GramaticaParser(tokens);
             parser.removeErrorListeners();
             parser.addErrorListener(errorCollector);
 
-// modificacion para generar reporte de tokens unicamente cuando no hay error Joaquin Garcia
+// [Inicio][8/04/2026][Joaquín García] [modificacion para generar reporte de tokens unicamente cuando no hay error]
     parser.programa();
 
     // 5. Generar reportes HTML
@@ -105,7 +105,7 @@ System.out.println("-------------------------------------------------------");
         }
     }
     
-    //finalización de modificacion para generar reporte de tokens unicamente cuando no hay error Joaquin Garcia
+    // [Fin][8/04/2026][Joaquín García] [modificacion para generar reporte de tokens unicamente cuando no hay error]
     
     private static String identificarCategoria(String nombreToken) {
     if (nombreToken == null) return "Desconocido";
