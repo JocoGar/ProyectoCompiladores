@@ -34,6 +34,7 @@ comentario
 
 declaracionGlobal
     : declaracionVariable
+    | declaracionArreglo
     ;
 
 /* 
@@ -70,13 +71,17 @@ bloque
 
 instruccion
     : declaracionVariable
+    | declaracionArreglo
     | asignacion HECHO
+    | asignacionArreglo HECHO
+    | actualizacion HECHO
     | instruccionImprimir HECHO
     | instruccionCaptar HECHO
     | estructuraCondicional
     | estructuraMientras
     | estructuraHacerMientras
     | estructuraPara
+    | estructuraSwitch
     | instruccionRetorno HECHO
     | instruccionControlFlujo HECHO
     | llamadaFuncion HECHO
@@ -86,8 +91,16 @@ declaracionVariable
     : tipoVariable IDENTIFICADOR (PAL_ASIGNA expresion)? HECHO
     ;
 
+declaracionArreglo
+    : tipoVariable IDENTIFICADOR INICIO_PONCHO NUMERO FIN_PONCHO HECHO
+    ;
+
 asignacion
     : IDENTIFICADOR PAL_ASIGNA expresion
+    ;
+
+asignacionArreglo
+    : accesoArreglo PAL_ASIGNA expresion
     ;
 
 /* 
@@ -99,7 +112,12 @@ instruccionImprimir
     ;
 
 instruccionCaptar
-    : PAL_CAPTAR ABRE IDENTIFICADOR CIERRA
+    : PAL_CAPTAR ABRE destinoEntrada CIERRA
+    ;
+
+destinoEntrada
+    : IDENTIFICADOR
+    | accesoArreglo
     ;
 
 /* 
@@ -149,6 +167,29 @@ actualizacionPara
 actualizacion
     : IDENTIFICADOR (PAL_SUBIR | PAL_BAJAR)
     | (PAL_SUBIR | PAL_BAJAR) IDENTIFICADOR
+    ;
+
+/* 
+   SWITCH / CASE
+*/
+
+estructuraSwitch
+    : PAL_LIGHT ABRE expresion CIERRA CONTIENE casoSwitch* defectoSwitch? LISTO
+    ;
+
+casoSwitch
+    : PAL_CERRADO valorCaso ENTONCES bloque
+    ;
+
+defectoSwitch
+    : PAL_DEFENSE ENTONCES bloque
+    ;
+
+valorCaso
+    : NUMERO
+    | cadenaLiteral
+    | PAL_VERDAD
+    | PAL_MENTIRA
     ;
 
 /* 
@@ -202,13 +243,23 @@ expresionMultiplicativa
 
 expresionUnaria
     : PAL_OPUESTO expresionUnaria
+    | PAL_QUITA expresionUnaria
     | expresionPrimaria
     ;
 
 expresionPrimaria
     : ABRE expresion CIERRA
     | llamadaFuncion
+    | accesoArreglo
     | literal
+    ;
+
+/* 
+   ARREGLOS
+*/
+
+accesoArreglo
+    : IDENTIFICADOR INICIO_PONCHO expresion FIN_PONCHO
     ;
 
 /* 

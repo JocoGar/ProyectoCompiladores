@@ -1,7 +1,5 @@
-package lexerparser;
-
 // Generated from GramaticaParser.g4 by ANTLR 4.13.2
-import lexerparser.GramaticaParser;
+package lexerparser;
 import org.antlr.v4.runtime.tree.ParseTreeListener;
 
 /**
@@ -140,6 +138,16 @@ public interface GramaticaParserListener extends ParseTreeListener {
 	 */
 	void exitDeclaracionVariable(GramaticaParser.DeclaracionVariableContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link GramaticaParser#declaracionArreglo}.
+	 * @param ctx the parse tree
+	 */
+	void enterDeclaracionArreglo(GramaticaParser.DeclaracionArregloContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link GramaticaParser#declaracionArreglo}.
+	 * @param ctx the parse tree
+	 */
+	void exitDeclaracionArreglo(GramaticaParser.DeclaracionArregloContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link GramaticaParser#asignacion}.
 	 * @param ctx the parse tree
 	 */
@@ -149,6 +157,16 @@ public interface GramaticaParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitAsignacion(GramaticaParser.AsignacionContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link GramaticaParser#asignacionArreglo}.
+	 * @param ctx the parse tree
+	 */
+	void enterAsignacionArreglo(GramaticaParser.AsignacionArregloContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link GramaticaParser#asignacionArreglo}.
+	 * @param ctx the parse tree
+	 */
+	void exitAsignacionArreglo(GramaticaParser.AsignacionArregloContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link GramaticaParser#instruccionImprimir}.
 	 * @param ctx the parse tree
@@ -169,6 +187,16 @@ public interface GramaticaParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitInstruccionCaptar(GramaticaParser.InstruccionCaptarContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link GramaticaParser#destinoEntrada}.
+	 * @param ctx the parse tree
+	 */
+	void enterDestinoEntrada(GramaticaParser.DestinoEntradaContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link GramaticaParser#destinoEntrada}.
+	 * @param ctx the parse tree
+	 */
+	void exitDestinoEntrada(GramaticaParser.DestinoEntradaContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link GramaticaParser#estructuraCondicional}.
 	 * @param ctx the parse tree
@@ -259,6 +287,46 @@ public interface GramaticaParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitActualizacion(GramaticaParser.ActualizacionContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link GramaticaParser#estructuraSwitch}.
+	 * @param ctx the parse tree
+	 */
+	void enterEstructuraSwitch(GramaticaParser.EstructuraSwitchContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link GramaticaParser#estructuraSwitch}.
+	 * @param ctx the parse tree
+	 */
+	void exitEstructuraSwitch(GramaticaParser.EstructuraSwitchContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link GramaticaParser#casoSwitch}.
+	 * @param ctx the parse tree
+	 */
+	void enterCasoSwitch(GramaticaParser.CasoSwitchContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link GramaticaParser#casoSwitch}.
+	 * @param ctx the parse tree
+	 */
+	void exitCasoSwitch(GramaticaParser.CasoSwitchContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link GramaticaParser#defectoSwitch}.
+	 * @param ctx the parse tree
+	 */
+	void enterDefectoSwitch(GramaticaParser.DefectoSwitchContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link GramaticaParser#defectoSwitch}.
+	 * @param ctx the parse tree
+	 */
+	void exitDefectoSwitch(GramaticaParser.DefectoSwitchContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link GramaticaParser#valorCaso}.
+	 * @param ctx the parse tree
+	 */
+	void enterValorCaso(GramaticaParser.ValorCasoContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link GramaticaParser#valorCaso}.
+	 * @param ctx the parse tree
+	 */
+	void exitValorCaso(GramaticaParser.ValorCasoContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link GramaticaParser#instruccionRetorno}.
 	 * @param ctx the parse tree
@@ -369,6 +437,16 @@ public interface GramaticaParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitExpresionPrimaria(GramaticaParser.ExpresionPrimariaContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link GramaticaParser#accesoArreglo}.
+	 * @param ctx the parse tree
+	 */
+	void enterAccesoArreglo(GramaticaParser.AccesoArregloContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link GramaticaParser#accesoArreglo}.
+	 * @param ctx the parse tree
+	 */
+	void exitAccesoArreglo(GramaticaParser.AccesoArregloContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link GramaticaParser#literal}.
 	 * @param ctx the parse tree

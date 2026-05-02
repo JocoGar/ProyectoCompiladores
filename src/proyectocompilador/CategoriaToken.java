@@ -90,6 +90,18 @@ public class CategoriaToken {
             case "COMENTARIO_LINEA":
             case "COMENTARIO_BLOQUE":
                 return "Comentario";
+                
+            case "PAL_LIGHT":
+            case "PAL_CERRADO":
+            case "PAL_DEFENSE":
+                return "Estructura Switch/Case";
+
+            case "ENTONCES":
+                return "Símbolo/Delimitador";
+
+            case "INICIO_PONCHO":
+            case "FIN_PONCHO":
+                return "Delimitador de Arreglo";
 
             default:
                 return "Otros";

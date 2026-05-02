@@ -24,6 +24,12 @@ PAL_REPETIR    : 'repetir' ;
 PAL_INICIAR    : 'iniciar' ;
 PAL_LOOP       : 'loop' ;
 
+// Switch / Case
+PAL_LIGHT      : 'light' ;
+PAL_CERRADO    : 'cerrado' ;
+PAL_DEFENSE    : 'defense' ;
+ENTONCES       : 'entonces' ;
+
 // Control de flujo
 PAL_PARAR      : 'parar' ;
 PAL_SALTAR     : 'saltar' ;
@@ -64,7 +70,11 @@ LISTO          : 'listo' ;
 HECHO          : 'hecho' ;
 ABRE           : 'abre' ;
 CIERRA         : 'cierra' ;
-SEPARA          : 'separa' ;
+SEPARA         : 'separa' ;
+
+// Arreglos
+INICIO_PONCHO  : 'inicio_poncho' ;
+FIN_PONCHO     : 'fin_poncho' ;
 
 // Cadenas
 CADENA_INICIO
