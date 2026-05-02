@@ -4,42 +4,119 @@
  */
 package frontend;
 
-import com.formdev.flatlaf.FlatDarkLaf;
+
+
 import com.formdev.flatlaf.FlatLaf;
 import com.formdev.flatlaf.themes.FlatMacDarkLaf;
-import java.util.ArrayList;
+import java.util.Collections;
+import javax.swing.JOptionPane;
 import javax.swing.UIManager;
-import proyectocompilador.ErrorCollector;
-import proyectocompilador.GramaticaLexer;
-import proyectocompilador.GramaticaParser;
-import proyectocompilador.ReporteGenerator;
-import java.io.File;
-import org.antlr.v4.runtime.*;
+import javax.swing.table.DefaultTableModel;
+import proyectocompilador.*;
+
+import proyectocompilador.ServicioCompilador;
 
 /**
  *
  * @author roood
  */
 public class VistaPrincipal extends javax.swing.JFrame {
-
+    private final ServicioCompilador servicioCompilador;
+    private final ServicioArchivo servicioArchivo;
     /**
      * Creates new form VistaPrincipal
      */
     public VistaPrincipal() {
         initComponents();
-        try {
-            java.io.File archivoEntrada = new java.io.File("entrada.txt");
-            
-            if (archivoEntrada.exists()) {
-                // Leemos el contenido y lo ponemos en el área de texto
-                String contenido = new String(java.nio.file.Files.readAllBytes(archivoEntrada.toPath()));
-                txtCodigo.setText(contenido);
-                System.out.println("- Se cargo el archivo entrada.txt al iniciar la aplicacion.");
-            } else {
-                System.out.println("- Aviso: No se encontro entrada.txt en la raiz del proyecto.");
+
+        this.servicioCompilador = new ServicioCompilador();
+        this.servicioArchivo = new ServicioArchivo();
+
+        cargarArchivoInicial();
+        inicializarTablas();
+    }
+    
+        private void cargarArchivoInicial() {
+        String contenido = servicioArchivo.leerArchivoSiExiste("entrada.txt");
+
+        if (!contenido.isEmpty()) {
+            txtCodigo.setText(contenido);
+            System.out.println("- Se cargo el archivo entrada.txt al iniciar la aplicacion.");
+        } else {
+            System.out.println("- Aviso: No se encontró entrada.txt en la raíz del proyecto.");
+        }
+    }
+
+    private void inicializarTablas() {
+        tablaTokens.setModel(crearModeloTokens());
+        tablaErrores.setModel(crearModeloErrores());
+    }
+
+    private DefaultTableModel crearModeloTokens() {
+        return new DefaultTableModel(
+                new Object[][]{},
+                new String[]{"Lexema", "Token", "Categoría", "Línea", "Columna"}
+        );
+    }
+
+    private DefaultTableModel crearModeloErrores() {
+        return new DefaultTableModel(
+                new Object[][]{},
+                new String[]{"Tipo", "Línea", "Columna", "Lexema", "Mensaje"}
+        );
+    }
+
+    private void mostrarTokens(ResultadoCompilacion resultado) {
+        DefaultTableModel modelo = crearModeloTokens();
+
+        if (!resultado.tieneErrores()) {
+            for (TokenInfo token : resultado.getTokens()) {
+                modelo.addRow(new Object[]{
+                    token.getLexema(),
+                    token.getToken(),
+                    token.getCategoria(),
+                    token.getLinea(),
+                    token.getColumna()
+                });
             }
-        } catch (Exception ex) {
-            System.err.println("Error al intentar cargar entrada.txt al inicio: " + ex.getMessage());
+        }
+
+        tablaTokens.setModel(modelo);
+    }
+
+    private void mostrarErrores(ResultadoCompilacion resultado) {
+        DefaultTableModel modelo = crearModeloErrores();
+
+        for (ErrorInfo error : resultado.getErrores()) {
+            modelo.addRow(new Object[]{
+                error.getTipo(),
+                error.getLinea(),
+                error.getColumna(),
+                error.getLexema(),
+                error.getMensaje()
+            });
+        }
+
+        tablaErrores.setModel(modelo);
+    }
+
+    private void mostrarMensajeFinal(ResultadoCompilacion resultado) {
+        if (resultado.tieneErrores()) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Análisis completado con errores.\n"
+                    + "Se generó BitacoraErrores.html y BitacoraTokens.html vacío.",
+                    "Advertencia",
+                    JOptionPane.WARNING_MESSAGE
+            );
+        } else {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Análisis completado exitosamente.\n"
+                    + "Se generó BitacoraTokens.html y BitacoraErrores.html vacío.",
+                    "Éxito",
+                    JOptionPane.INFORMATION_MESSAGE
+            );
         }
     }
 
@@ -63,12 +140,15 @@ public class VistaPrincipal extends javax.swing.JFrame {
         jLabel1 = new javax.swing.JLabel();
         jLabel2 = new javax.swing.JLabel();
         jLabel3 = new javax.swing.JLabel();
+        btnTokens = new javax.swing.JButton();
+        btnErrores = new javax.swing.JButton();
+        btnCargar = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Compilador v1.0");
 
         btnCompilar.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
-        btnCompilar.setText("Compilar y Generar HTML");
+        btnCompilar.setText("Compilar");
         btnCompilar.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnCompilarActionPerformed(evt);
@@ -117,6 +197,30 @@ public class VistaPrincipal extends javax.swing.JFrame {
         jLabel3.setForeground(javax.swing.UIManager.getDefaults().getColor("Actions.Red"));
         jLabel3.setText("Espacio de Código:");
 
+        btnTokens.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
+        btnTokens.setText("Tokens");
+        btnTokens.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnTokensActionPerformed(evt);
+            }
+        });
+
+        btnErrores.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
+        btnErrores.setText("Errores");
+        btnErrores.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnErroresActionPerformed(evt);
+            }
+        });
+
+        btnCargar.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
+        btnCargar.setText("CargarArchivo");
+        btnCargar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnCargarActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -128,7 +232,11 @@ public class VistaPrincipal extends javax.swing.JFrame {
                         .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 333, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(layout.createSequentialGroup()
                         .addGap(64, 64, 64)
-                        .addComponent(btnCompilar, javax.swing.GroupLayout.PREFERRED_SIZE, 210, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(btnTokens, javax.swing.GroupLayout.PREFERRED_SIZE, 210, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(btnCompilar, javax.swing.GroupLayout.PREFERRED_SIZE, 210, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(btnCargar, javax.swing.GroupLayout.PREFERRED_SIZE, 210, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(btnErrores, javax.swing.GroupLayout.PREFERRED_SIZE, 210, javax.swing.GroupLayout.PREFERRED_SIZE))))
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -171,153 +279,71 @@ public class VistaPrincipal extends javax.swing.JFrame {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(jLabel2)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 18, Short.MAX_VALUE)
-                        .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 280, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 280, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addContainerGap())
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 370, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(18, 18, 18)
                         .addComponent(btnCompilar, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(0, 0, Short.MAX_VALUE)))
-                .addContainerGap())
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(btnCargar, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(btnTokens, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(btnErrores, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(21, 21, 21))))
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnCompilarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCompilarActionPerformed
-        String codigoFuente= txtCodigo.getText();
-        
-        if (codigoFuente.trim().isEmpty()){
-            javax.swing.JOptionPane.showMessageDialog(this, "Por favor, ingresar código para compilar");
+           String codigoFuente = txtCodigo.getText();
+
+        if (codigoFuente.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Por favor, ingrese código para compilar.",
+                    "Advertencia",
+                    JOptionPane.WARNING_MESSAGE
+            );
             return;
         }
-        try {
-        org.antlr.v4.runtime.CharStream input = org.antlr.v4.runtime.CharStreams.fromString(codigoFuente);
-        
-        GramaticaLexer lexer = new GramaticaLexer(input);
-        ErrorCollector errorCollector = new ErrorCollector();
 
-        lexer.removeErrorListeners();
-        lexer.addErrorListener(errorCollector);
+        ResultadoCompilacion resultado = servicioCompilador.compilar(codigoFuente);
 
-        org.antlr.v4.runtime.CommonTokenStream tokens = new org.antlr.v4.runtime.CommonTokenStream(lexer);
-        tokens.fill(); 
-
-        javax.swing.table.DefaultTableModel modeloTokens = new javax.swing.table.DefaultTableModel(
-            new Object [][] {},
-            new String [] {"Lexema", "Token", "Categoría", "Línea", "Columna"}
-        );
-        ArrayList<String> filasTokensHTML = new ArrayList<>();
-
-        for (org.antlr.v4.runtime.Token t : tokens.getTokens()) {
-            if (t.getType() != org.antlr.v4.runtime.Token.EOF) {
-                String nombreToken = GramaticaLexer.VOCABULARY.getSymbolicName(t.getType());
-                String categoria = identificarCategoria(nombreToken); 
- 
-                modeloTokens.addRow(new Object[]{
-                    t.getText(), nombreToken, categoria, t.getLine(), t.getCharPositionInLine()
-                });
- 
-                filasTokensHTML.add(
-                    "<tr>" +
-                    "<td>" + escaparHTML(t.getText()) + "</td>" +
-                    "<td>" + nombreToken + "</td>" +
-                    "<td>" + categoria + "</td>" + 
-                    "<td>" + t.getLine() + "</td>" +
-                    "<td>" + t.getCharPositionInLine() + "</td>" +
-                    "</tr>"
-                );
-            }
-        }
-       
-
-        GramaticaParser parser = new GramaticaParser(tokens);
-        parser.removeErrorListeners();
-        parser.addErrorListener(errorCollector);
-        parser.programa();
-
-        javax.swing.table.DefaultTableModel modeloErrores = new javax.swing.table.DefaultTableModel(
-            new Object [][] {},
-            new String [] {"Tipo", "Línea", "Columna", "Lexema", "Mensaje"}
-        );
-
-        for (Object[] error : errorCollector.erroresPuros) {
-            modeloErrores.addRow(error);
-        }
-        tablaErrores.setModel(modeloErrores);
-
-
-        
-        if (errorCollector.errores.isEmpty()) {
-            
-           
-            tablaTokens.setModel(modeloTokens);
-            
-        
-            ReporteGenerator.generarHTML(
-                "BitacoraTokens",
-                "Reporte de Tokens",
-                "<th>Lexema</th><th>Token</th><th>Categoría</th><th>Línea</th><th>Columna</th>",
-                filasTokensHTML
-            );
-
-            
-            ReporteGenerator.generarHTML(
-                "BitacoraErrores",
-                "Reporte de Errores",
-                "<th>Tipo</th><th>Línea</th><th>Columna</th><th>Lexema</th><th>Mensaje</th>",
-                new java.util.ArrayList<>() // Pasamos una lista vacía
-            );
-
-            System.out.println("- Se genero: BitacoraTokens.html (lleno) y BitacoraErrores.html (vacio)");
-
-            javax.swing.JOptionPane.showMessageDialog(this, 
-                "Analisis completado exitosamente.\nSe generaron los Tokens.", 
-                "Exito", 
-                javax.swing.JOptionPane.INFORMATION_MESSAGE);
-
-        } else {
-            
-            
-            tablaTokens.setModel(new javax.swing.table.DefaultTableModel(
-                new Object [][] {},
-                new String [] {"Lexema", "Token", "Categoría", "Línea", "Columna"}
-            ));
-
-            
-            ReporteGenerator.generarHTML(
-                "BitacoraErrores",
-                "Reporte de Errores",
-                "<th>Tipo</th><th>Línea</th><th>Columna</th><th>Lexema</th><th>Mensaje</th>",
-                errorCollector.errores 
-            );
-
-            
-            ReporteGenerator.generarHTML(
-                "BitacoraTokens",
-                "Reporte de Tokens",
-                "<th>Lexema</th><th>Token</th><th>Categoría</th><th>Línea</th><th>Columna</th>",
-                new java.util.ArrayList<>() // Pasamos una lista vacía
-            );
-            
-            System.out.println("- Hubo errores. Se genero: BitacoraErrores.html (lleno) y BitacoraTokens.html (vacio)");
-
-            
-            javax.swing.JOptionPane.showMessageDialog(this, 
-                "Análisis completado con errores.\nNo se generaron Tokens.", 
-                "Advertencia", 
-                javax.swing.JOptionPane.WARNING_MESSAGE);
-        }
-        
-   
-
-    } catch (Exception e) {
-        javax.swing.JOptionPane.showMessageDialog(this, "Error crítico: " + e.getMessage(), "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
-        e.printStackTrace();
-    }
-
-
+        mostrarTokens(resultado);
+        mostrarErrores(resultado);
+        mostrarMensajeFinal(resultado);
         
     }//GEN-LAST:event_btnCompilarActionPerformed
+
+    private void btnTokensActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTokensActionPerformed
+        // TODO add your handling code here:
+            servicioArchivo.abrirArchivoHTML("BitacoraTokens.html", this);
+    }//GEN-LAST:event_btnTokensActionPerformed
+
+    private void btnErroresActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnErroresActionPerformed
+        // TODO add your handling code here:
+            servicioArchivo.abrirArchivoHTML("BitacoraErrores.html", this);
+
+    }//GEN-LAST:event_btnErroresActionPerformed
+
+    private void btnCargarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCargarActionPerformed
+        // TODO add your handling code here:
+            String contenido = servicioArchivo.seleccionarYLeerArchivo(this);
+
+    if (!contenido.isEmpty()) {
+        txtCodigo.setText(contenido);
+
+        JOptionPane.showMessageDialog(
+                this,
+                "Archivo cargado correctamente.",
+                "Carga exitosa",
+                JOptionPane.INFORMATION_MESSAGE
+        );
+    }
+    }//GEN-LAST:event_btnCargarActionPerformed
 
     /**
      * @param args the command line arguments
@@ -344,7 +370,10 @@ public class VistaPrincipal extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton btnCargar;
     private javax.swing.JButton btnCompilar;
+    private javax.swing.JButton btnErrores;
+    private javax.swing.JButton btnTokens;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
@@ -356,61 +385,7 @@ public class VistaPrincipal extends javax.swing.JFrame {
     private javax.swing.JTable tablaTokens;
     private javax.swing.JTextArea txtCodigo;
     // End of variables declaration//GEN-END:variables
-        private String identificarCategoria(String nombreToken) {
-        if (nombreToken == null) return "Desconocido";
 
-        switch (nombreToken) {
-            case "PAL_NUMERO": case "PAL_REAL": case "PAL_PRECISO": 
-            case "PAL_SIGNO": case "PAL_TEXTO": case "PAL_ESTADO": 
-            case "PAL_VACIO":
-                return "Tipo de Dato";
-            case "PAL_VALIDAR": case "PAL_ALTERNO": case "PAL_SIGUIENTE":
-            case "PAL_REPETIR": case "PAL_INICIAR": case "PAL_LOOP": 
-                return "Estructura de Control";
-            case "PAL_PROYECTAR": case "PAL_CAPTAR": 
-            case "PAL_DAR": case "PAL_RAIZ":
-            case "PAL_PARAR": case "PAL_SALTAR":
-            case "PAL_ASIGNA":
-                return "Palabra Reservada";
-            case "PAL_UNE": case "PAL_VECES": case "PAL_QUITA": 
-            case "PAL_REPARTE": case "PAL_SOBRA":
-                return "Operador Aritmético";
-            case "PAL_SUPERA": case "PAL_BAJO": case "PAL_MINIMO": 
-            case "PAL_TOPE": case "PAL_CALCA": case "PAL_AJENO":
-                return "Operador Relacional";
-            case "PAL_VINCULO": case "PAL_OPCION": case "PAL_OPUESTO":
-                return "Operador Lógico";
-            case "PAL_SUBIR": case "PAL_BAJAR":
-                return "Incremento/Decremento";
-            case "CONTIENE": case "LISTO": case "HECHO": 
-            case "ABRE": case "CIERRA": case "SEPARA":
-                return "Símbolo/Delimitador";
-            case "NUMERO":
-                return "Literal Numérico";
-            case "PAL_VERDAD": case "PAL_MENTIRA":
-                return "Literal Booleano";
-            case "IDENTIFICADOR":
-                return "Identificador";
-            case "CADENA_INICIO": case "CADENA_CIERRA":
-                return "Delimitador de Cadena";
-            case "TEXTO_CADENA":
-                return "Contenido de Cadena";
-            case "COMENTARIO_LINEA": case "COMENTARIO_BLOQUE":
-                return "Comentario";
-            default:
-                return "Otros";
-        }
-    }
 
-    private String escaparHTML(String texto) {
-        if (texto == null) {
-            return "";
-        }
-        return texto
-                .replace("&", "&amp;")
-                .replace("<", "&lt;")
-                .replace(">", "&gt;")
-                .replace("\"", "&quot;")
-                .replace("'", "&#39;");
-    }
+
 }

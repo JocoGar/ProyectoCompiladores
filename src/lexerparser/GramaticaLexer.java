@@ -1,4 +1,4 @@
-package proyectocompilador;
+package lexerparser;
 
 // Generated from GramaticaLexer.g4 by ANTLR 4.13.2
 import org.antlr.v4.runtime.Lexer;

@@ -1,8 +1,8 @@
-package proyectocompilador;
+package lexerparser;
 
 // Generated from GramaticaParser.g4 by ANTLR 4.13.2
 
-import proyectocompilador.GramaticaParser;
+import lexerparser.GramaticaParser;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
