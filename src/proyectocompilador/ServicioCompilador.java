@@ -133,7 +133,7 @@ public class ServicioCompilador {
         ReporteGenerator.generarHTML(
                 "BitacoraTokens",
                 "Reporte de Tokens",
-                "<th>Lexema</th><th>Token</th><th>Categoría</th><th>Línea</th><th>Columna</th>",
+                "<th>Lexema</th><th>Token</th><th>Categoría</th><th>Equivalente en C++</th><th>Línea</th><th>Columna</th>",
                 filas
         );
     }
@@ -157,7 +157,7 @@ public class ServicioCompilador {
         ReporteGenerator.generarHTML(
                 "BitacoraTokens",
                 "Reporte de Tokens",
-                "<th>Lexema</th><th>Token</th><th>Categoría</th><th>Línea</th><th>Columna</th>",
+                "<th>Lexema</th><th>Token</th><th>Categoría</th><th>Equivalente en C++</th><th>Línea</th><th>Columna</th>",
                 new ArrayList<>()
         );
     }

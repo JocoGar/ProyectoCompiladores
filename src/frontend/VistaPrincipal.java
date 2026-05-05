@@ -55,7 +55,7 @@ public class VistaPrincipal extends javax.swing.JFrame {
     private DefaultTableModel crearModeloTokens() {
         return new DefaultTableModel(
                 new Object[][]{},
-                new String[]{"Lexema", "Token", "Categoría", "Línea", "Columna"}
+                new String[]{"Lexema", "Token", "Categoría", "Equivalente en C++", "Línea", "Columna"}
         );
     }
 
@@ -66,23 +66,30 @@ public class VistaPrincipal extends javax.swing.JFrame {
         );
     }
 
-    private void mostrarTokens(ResultadoCompilacion resultado) {
-        DefaultTableModel modelo = crearModeloTokens();
+private void mostrarTokens(ResultadoCompilacion resultado) {
+    DefaultTableModel modelo = crearModeloTokens();
 
-        if (!resultado.tieneErrores()) {
-            for (TokenInfo token : resultado.getTokens()) {
-                modelo.addRow(new Object[]{
-                    token.getLexema(),
+    if (!resultado.tieneErrores()) {
+        for (TokenInfo token : resultado.getTokens()) {
+
+            String equivalenteCpp = CategoriaToken.obtenerEquivalenteCpp(
                     token.getToken(),
-                    token.getCategoria(),
-                    token.getLinea(),
-                    token.getColumna()
-                });
-            }
-        }
+                    token.getLexema()
+            );
 
-        tablaTokens.setModel(modelo);
+            modelo.addRow(new Object[]{
+                token.getLexema(),
+                token.getToken(),
+                token.getCategoria(),
+                equivalenteCpp,
+                token.getLinea(),
+                token.getColumna()
+            });
+        }
     }
+
+    tablaTokens.setModel(modelo);
+}
 
     private void mostrarErrores(ResultadoCompilacion resultado) {
         DefaultTableModel modelo = crearModeloErrores();
