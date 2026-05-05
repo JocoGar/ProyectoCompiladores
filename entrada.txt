@@ -4,7 +4,7 @@ apunte comentario de bloque fin_apunte
 num gi asigna 1 hecho
 real gr asigna 2.5 hecho
 preciso gp asigna 3.75 hecho
-signo gs asigna 4 hecho
+signo gs hecho
 text gt asigna cadena hola fin_cadena hecho
 estado ge asigna verdad hecho
 
@@ -18,7 +18,7 @@ listo
 
 empty raiz abre cierra contiene
     captar abre gt cierra hecho
-    num x asigna opuesto 5 hecho
+    num x asigna quita 5 hecho
 
     validar abre x supera gi vinculo ge cierra contiene
         proyectar abre cadena mayor fin_cadena cierra hecho

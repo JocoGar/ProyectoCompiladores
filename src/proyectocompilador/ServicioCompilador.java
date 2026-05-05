@@ -4,18 +4,20 @@
  */
 package proyectocompilador;
 
-
-
+import fase2.AnalizadorSemantico;
+import fase2.GeneradorIntermedioCpp;
 import lexerparser.GramaticaLexer;
 import lexerparser.GramaticaParser;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.tree.ParseTree;
 
+import java.io.PrintWriter;
 import java.util.ArrayList;
 
-public class ServicioCompilador{
+public class ServicioCompilador {
 
     public ResultadoCompilacion compilar(String codigoFuente) {
         ResultadoCompilacion resultado = new ResultadoCompilacion();
@@ -38,9 +40,16 @@ public class ServicioCompilador{
             parser.removeErrorListeners();
             parser.addErrorListener(errorCollector);
 
-            parser.programa();
+            ParseTree arbol = parser.programa();
 
             recolectarErrores(errorCollector, resultado);
+
+            if (!resultado.tieneErrores()) {
+                ejecutarFase2(arbol, resultado);
+            } else {
+                generarTablaSimbolosVacia();
+                generarCodigoIntermedioVacio();
+            }
 
             generarReportes(resultado);
 
@@ -52,9 +61,33 @@ public class ServicioCompilador{
                     "",
                     e.getMessage()
             ));
+
+            generarTablaSimbolosVacia();
+            generarCodigoIntermedioVacio();
+            generarReportes(resultado);
         }
 
         return resultado;
+    }
+
+    private void ejecutarFase2(ParseTree arbol, ResultadoCompilacion resultado) {
+        AnalizadorSemantico semantico = new AnalizadorSemantico();
+        semantico.visit(arbol);
+
+        resultado.setTablaSimbolos(semantico.getTabla());
+        resultado.agregarErrores(semantico.getErrores());
+
+        semantico.getTabla().generarReporteHTML();
+
+        if (!resultado.tieneErrores()) {
+            GeneradorIntermedioCpp generador = new GeneradorIntermedioCpp();
+            generador.visit(arbol);
+            generador.guardarArchivo();
+
+            resultado.setCodigoIntermedio(generador.getCodigo());
+        } else {
+            generarCodigoIntermedioVacio();
+        }
     }
 
     private void recolectarTokens(CommonTokenStream tokens, ResultadoCompilacion resultado) {
@@ -74,13 +107,11 @@ public class ServicioCompilador{
         }
     }
 
-private void recolectarErrores(ErrorCollector errorCollector, ResultadoCompilacion resultado) {
-    for (ErrorInfo error : errorCollector.getErroresInfo()) {
-        resultado.agregarError(error);
+    private void recolectarErrores(ErrorCollector errorCollector, ResultadoCompilacion resultado) {
+        for (ErrorInfo error : errorCollector.getErroresInfo()) {
+            resultado.agregarError(error);
+        }
     }
-}
-
-
 
     private void generarReportes(ResultadoCompilacion resultado) {
         if (resultado.tieneErrores()) {
@@ -116,7 +147,7 @@ private void recolectarErrores(ErrorCollector errorCollector, ResultadoCompilaci
 
         ReporteGenerator.generarHTML(
                 "BitacoraErrores",
-                "Reporte de Errores",
+                "Reporte de Errores Léxicos, Sintácticos y Semánticos",
                 "<th>Tipo</th><th>Línea</th><th>Columna</th><th>Lexema</th><th>Mensaje</th>",
                 filas
         );
@@ -134,9 +165,26 @@ private void recolectarErrores(ErrorCollector errorCollector, ResultadoCompilaci
     private void generarReporteErroresVacio() {
         ReporteGenerator.generarHTML(
                 "BitacoraErrores",
-                "Reporte de Errores",
+                "Reporte de Errores Léxicos, Sintácticos y Semánticos",
                 "<th>Tipo</th><th>Línea</th><th>Columna</th><th>Lexema</th><th>Mensaje</th>",
                 new ArrayList<>()
         );
+    }
+
+    private void generarTablaSimbolosVacia() {
+        ReporteGenerator.generarHTML(
+                "TablaSimbolos",
+                "Tabla de Símbolos",
+                "<th>Nombre</th><th>Tipo</th><th>Rol</th><th>Ámbito</th><th>Clase Ámbito</th><th>Nivel</th><th>Línea</th><th>Columna</th><th>Tamaño Arreglo</th><th>Parámetros</th>",
+                new ArrayList<>()
+        );
+    }
+
+    private void generarCodigoIntermedioVacio() {
+        try (PrintWriter pw = new PrintWriter("CodigoIntermedio.cpp", "UTF-8")) {
+            pw.println("// No se generó código intermedio porque existen errores léxicos, sintácticos o semánticos.");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
