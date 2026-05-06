@@ -1,9 +1,11 @@
 /build/
 /dist/
 nbproject/private/
-BitacoraErrores
-BitacoraTokens
-entrada
-TablaSimbolos
+
+BitacoraErrores.html
+BitacoraTokens.html
+TablaSimbolos.html
+entrada.txt
 CodigoIntermedio.cpp
+CodigoIntermedio.exe
 CodigoIntermedio
