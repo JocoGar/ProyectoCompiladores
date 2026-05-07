@@ -178,13 +178,15 @@ public class AnalizadorSemantico extends GramaticaParserBaseVisitor<TipoDato> {
             agregarError(tokenId, nombre, "La variable '" + nombre + "' ya fue declarada en este ámbito.");
         }
 
-        if (ctx.expresion() != null) {
-            TipoDato tipoExpresion = visit(ctx.expresion());
+            if (ctx.expresion() != null) {
+        simbolo.setValor(textoLegible(ctx.expresion().getText()));
 
-            if (!tipoExpresion.compatibleCon(tipo)) {
-                agregarError(tokenId, nombre, "No se puede asignar una expresión de tipo " + tipoExpresion + " a la variable '" + nombre + "' de tipo " + tipo + ".");
-            }
+        TipoDato tipoExpresion = visit(ctx.expresion());
+
+        if (!tipoExpresion.compatibleCon(tipo)) {
+            agregarError(tokenId, nombre, "No se puede asignar una expresión de tipo " + tipoExpresion + " a la variable '" + nombre + "' de tipo " + tipo + ".");
         }
+            }
 
         return TipoDato.VACIO;
     }
@@ -245,6 +247,9 @@ public class AnalizadorSemantico extends GramaticaParserBaseVisitor<TipoDato> {
             agregarError(tokenId, nombre, "El identificador '" + nombre + "' es un arreglo. Debes indicar una posición.");
             return TipoDato.ERROR;
         }
+
+        simbolo.incrementarUso();
+        simbolo.setValor(textoLegible(ctx.expresion().getText()));
 
         TipoDato tipoExpresion = visit(ctx.expresion());
 
@@ -312,7 +317,13 @@ public class AnalizadorSemantico extends GramaticaParserBaseVisitor<TipoDato> {
             agregarError(tokenId, nombre, "Solo se puede usar subir/bajar con variables numéricas.");
             return TipoDato.ERROR;
         }
+simbolo.incrementarUso();
 
+if (ctx.getText().contains("subir")) {
+    simbolo.setValor(nombre + " subir");
+} else {
+    simbolo.setValor(nombre + " bajar");
+}
         return TipoDato.VACIO;
     }
 
@@ -337,6 +348,8 @@ public class AnalizadorSemantico extends GramaticaParserBaseVisitor<TipoDato> {
         }
 
         if (ctx.expresion() != null) {
+            simbolo.setValor(textoLegible(ctx.expresion().getText()));
+
             TipoDato tipoExpresion = visit(ctx.expresion());
 
             if (!tipoExpresion.compatibleCon(tipo)) {
@@ -383,6 +396,7 @@ public class AnalizadorSemantico extends GramaticaParserBaseVisitor<TipoDato> {
             }
             return TipoDato.ERROR;
         }
+        funcion.incrementarUso();
 
         int esperados = funcion.getParametros().size();
         int recibidos = ctx.argumentos() == null ? 0 : ctx.argumentos().expresion().size();
@@ -456,6 +470,9 @@ public class AnalizadorSemantico extends GramaticaParserBaseVisitor<TipoDato> {
                 return TipoDato.ERROR;
             }
 
+            simbolo.incrementarUso();
+            simbolo.setValor("entrada_usuario");
+
             return simbolo.getTipo();
         }
 
@@ -513,7 +530,7 @@ public class AnalizadorSemantico extends GramaticaParserBaseVisitor<TipoDato> {
 
     @Override
     public TipoDato visitEstructuraPara(GramaticaParser.EstructuraParaContext ctx) {
-        tabla.entrarAmbito("bloque_loop_l" + ctx.getStart().getLine());
+        tabla.entrarAmbito("bloque_for_linea" + ctx.getStart().getLine());
 
         if (ctx.inicializacionPara() != null) {
             visit(ctx.inicializacionPara());
@@ -724,6 +741,8 @@ public class AnalizadorSemantico extends GramaticaParserBaseVisitor<TipoDato> {
                 return TipoDato.ERROR;
             }
 
+            simbolo.incrementarUso();
+
             return simbolo.getTipo();
         }
 
@@ -741,4 +760,30 @@ public class AnalizadorSemantico extends GramaticaParserBaseVisitor<TipoDato> {
 
         return TipoDato.ERROR;
     }
+    private String textoLegible(String texto) {
+    if (texto == null) {
+        return "";
+    }
+
+    return texto
+            .replace("fin_cadena", " fin_cadena")
+            .replace("cadena", "cadena ")
+            .replace("asigna", " asigna ")
+            .replace("une", " une ")
+            .replace("quita", " quita ")
+            .replace("veces", " veces ")
+            .replace("reparte", " reparte ")
+            .replace("sobra", " sobra ")
+            .replace("supera", " supera ")
+            .replace("bajo", " bajo ")
+            .replace("minimo", " minimo ")
+            .replace("tope", " tope ")
+            .replace("calca", " calca ")
+            .replace("ajeno", " ajeno ")
+            .replace("vinculo", " vinculo ")
+            .replace("opcion", " opcion ")
+            .replace("opuesto", "opuesto ")
+            .replaceAll("\\s+", " ")
+            .trim();
+}
 }

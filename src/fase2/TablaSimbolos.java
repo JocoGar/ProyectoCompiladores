@@ -46,6 +46,10 @@ public class TablaSimbolos {
         return actual.nivel;
     }
 
+    public String getNombreAmbitoPadre() {
+        return actual.padre == null ? "Ninguno" : actual.padre.nombre;
+    }
+
     public void entrarAmbito(String nombre) {
         Ambito nuevo = new Ambito(nombre, actual.nivel + 1, actual);
         actual = nuevo;
@@ -91,6 +95,30 @@ public class TablaSimbolos {
         return global.simbolos.get(nombre);
     }
 
+    public void registrarUso(String nombre) {
+        Simbolo simbolo = buscar(nombre);
+
+        if (simbolo != null) {
+            simbolo.incrementarUso();
+        }
+    }
+
+    public void registrarUsoGlobal(String nombre) {
+        Simbolo simbolo = buscarGlobal(nombre);
+
+        if (simbolo != null) {
+            simbolo.incrementarUso();
+        }
+    }
+
+    public void actualizarValor(String nombre, String valor) {
+        Simbolo simbolo = buscar(nombre);
+
+        if (simbolo != null) {
+            simbolo.setValor(valor);
+        }
+    }
+
     public List<Simbolo> getSimbolos() {
         return simbolos;
     }
@@ -105,7 +133,21 @@ public class TablaSimbolos {
         ReporteGenerator.generarHTML(
                 "TablaSimbolos",
                 "Tabla de Símbolos",
-                "<th>Nombre</th><th>Tipo</th><th>Rol</th><th>Ámbito</th><th>Clase Ámbito</th><th>Nivel</th><th>Línea</th><th>Columna</th><th>Tamaño Arreglo</th><th>Parámetros</th>",
+                "<th>ID</th>"
+                + "<th>Nombre</th>"
+                + "<th>Evento</th>"
+                + "<th>Tipo</th>"
+                + "<th>Rol</th>"
+                + "<th>Ámbito</th>"
+                + "<th>Clase Ámbito</th>"
+                + "<th>Nivel</th>"
+                + "<th>Línea</th>"
+                + "<th>Columna</th>"
+                + "<th>Última expresión asignada</th>"
+                + "<th>Cantidad de usos</th>"
+                + "<th>Tamaño arreglo</th>"
+                + "<th>Cantidad parámetros</th>"
+                + "<th>Tipos parámetros</th>",
                 filas
         );
     }
