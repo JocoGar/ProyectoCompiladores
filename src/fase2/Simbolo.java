@@ -12,6 +12,10 @@ public class Simbolo {
 
     private static int contadorIds = 1;
 
+        public static void reiniciarContadorIds() {
+        contadorIds = 1;
+    }
+    
     private final int id;
     private final String nombre;
     private final TipoDato tipo;

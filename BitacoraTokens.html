@@ -5,9 +5,9 @@
 <title>Reporte de Tokens</title>
 <style>
 body { font-family: Arial, sans-serif; margin: 30px; }
-h1 { color: #b30000; }
+h1 { color: #2e5984; }
 table { border-collapse: collapse; width: 100%; }
-th { background-color: #222; color: white; padding: 8px; }
+th { background-color: #c0392b; color: white; padding: 8px; }
 td { border: 1px solid #999; padding: 8px; }
 tr:nth-child(even) { background-color: #f2f2f2; }
 </style>
@@ -16,6 +16,77 @@ tr:nth-child(even) { background-color: #f2f2f2; }
 <h1>Reporte de Tokens</h1>
 <table>
 <tr><th>Lexema</th><th>Token</th><th>Categoría</th><th>Equivalente en C++</th><th>Línea</th><th>Columna</th></tr>
+<tr><td>num</td><td>PAL_NUMERO</td><td>Tipo de Dato</td><td>int</td><td>1</td><td>0</td></tr>
+<tr><td>contador</td><td>IDENTIFICADOR</td><td>Identificador</td><td>identificador / variable / función</td><td>1</td><td>4</td></tr>
+<tr><td>asigna</td><td>PAL_ASIGNA</td><td>Palabra Reservada</td><td>=</td><td>1</td><td>13</td></tr>
+<tr><td>2</td><td>NUMERO</td><td>Literal Numérico</td><td>literal numérico</td><td>1</td><td>20</td></tr>
+<tr><td>hecho</td><td>HECHO</td><td>Símbolo/Delimitador</td><td>;</td><td>1</td><td>22</td></tr>
+<tr><td>num</td><td>PAL_NUMERO</td><td>Tipo de Dato</td><td>int</td><td>2</td><td>0</td></tr>
+<tr><td>datos</td><td>IDENTIFICADOR</td><td>Identificador</td><td>identificador / variable / función</td><td>2</td><td>4</td></tr>
+<tr><td>inicio_poncho</td><td>INICIO_PONCHO</td><td>Delimitador de Arreglo</td><td>[</td><td>2</td><td>10</td></tr>
+<tr><td>3</td><td>NUMERO</td><td>Literal Numérico</td><td>literal numérico</td><td>2</td><td>24</td></tr>
+<tr><td>fin_poncho</td><td>FIN_PONCHO</td><td>Delimitador de Arreglo</td><td>]</td><td>2</td><td>26</td></tr>
+<tr><td>hecho</td><td>HECHO</td><td>Símbolo/Delimitador</td><td>;</td><td>2</td><td>37</td></tr>
+<tr><td>num</td><td>PAL_NUMERO</td><td>Tipo de Dato</td><td>int</td><td>4</td><td>0</td></tr>
+<tr><td>duplicar</td><td>IDENTIFICADOR</td><td>Identificador</td><td>identificador / variable / función</td><td>4</td><td>4</td></tr>
+<tr><td>abre</td><td>ABRE</td><td>Símbolo/Delimitador</td><td>(</td><td>4</td><td>13</td></tr>
+<tr><td>num</td><td>PAL_NUMERO</td><td>Tipo de Dato</td><td>int</td><td>4</td><td>18</td></tr>
+<tr><td>valor</td><td>IDENTIFICADOR</td><td>Identificador</td><td>identificador / variable / función</td><td>4</td><td>22</td></tr>
+<tr><td>cierra</td><td>CIERRA</td><td>Símbolo/Delimitador</td><td>)</td><td>4</td><td>28</td></tr>
+<tr><td>contiene</td><td>CONTIENE</td><td>Símbolo/Delimitador</td><td>{</td><td>4</td><td>35</td></tr>
+<tr><td>num</td><td>PAL_NUMERO</td><td>Tipo de Dato</td><td>int</td><td>5</td><td>0</td></tr>
+<tr><td>resultado</td><td>IDENTIFICADOR</td><td>Identificador</td><td>identificador / variable / función</td><td>5</td><td>4</td></tr>
+<tr><td>asigna</td><td>PAL_ASIGNA</td><td>Palabra Reservada</td><td>=</td><td>5</td><td>14</td></tr>
+<tr><td>valor</td><td>IDENTIFICADOR</td><td>Identificador</td><td>identificador / variable / función</td><td>5</td><td>21</td></tr>
+<tr><td>veces</td><td>PAL_VECES</td><td>Operador Aritmético</td><td>*</td><td>5</td><td>27</td></tr>
+<tr><td>2</td><td>NUMERO</td><td>Literal Numérico</td><td>literal numérico</td><td>5</td><td>33</td></tr>
+<tr><td>hecho</td><td>HECHO</td><td>Símbolo/Delimitador</td><td>;</td><td>5</td><td>35</td></tr>
+<tr><td>dar</td><td>PAL_DAR</td><td>Palabra Reservada</td><td>return</td><td>6</td><td>0</td></tr>
+<tr><td>resultado</td><td>IDENTIFICADOR</td><td>Identificador</td><td>identificador / variable / función</td><td>6</td><td>4</td></tr>
+<tr><td>hecho</td><td>HECHO</td><td>Símbolo/Delimitador</td><td>;</td><td>6</td><td>14</td></tr>
+<tr><td>listo</td><td>LISTO</td><td>Símbolo/Delimitador</td><td>}</td><td>7</td><td>0</td></tr>
+<tr><td>empty</td><td>PAL_VACIO</td><td>Tipo de Dato</td><td>void</td><td>9</td><td>0</td></tr>
+<tr><td>raiz</td><td>PAL_RAIZ</td><td>Palabra Reservada</td><td>main</td><td>9</td><td>6</td></tr>
+<tr><td>abre</td><td>ABRE</td><td>Símbolo/Delimitador</td><td>(</td><td>9</td><td>11</td></tr>
+<tr><td>cierra</td><td>CIERRA</td><td>Símbolo/Delimitador</td><td>)</td><td>9</td><td>16</td></tr>
+<tr><td>contiene</td><td>CONTIENE</td><td>Símbolo/Delimitador</td><td>{</td><td>9</td><td>23</td></tr>
+<tr><td>num</td><td>PAL_NUMERO</td><td>Tipo de Dato</td><td>int</td><td>10</td><td>0</td></tr>
+<tr><td>x</td><td>IDENTIFICADOR</td><td>Identificador</td><td>identificador / variable / función</td><td>10</td><td>4</td></tr>
+<tr><td>asigna</td><td>PAL_ASIGNA</td><td>Palabra Reservada</td><td>=</td><td>10</td><td>6</td></tr>
+<tr><td>5</td><td>NUMERO</td><td>Literal Numérico</td><td>literal numérico</td><td>10</td><td>13</td></tr>
+<tr><td>hecho</td><td>HECHO</td><td>Símbolo/Delimitador</td><td>;</td><td>10</td><td>15</td></tr>
+<tr><td>datos</td><td>IDENTIFICADOR</td><td>Identificador</td><td>identificador / variable / función</td><td>11</td><td>0</td></tr>
+<tr><td>inicio_poncho</td><td>INICIO_PONCHO</td><td>Delimitador de Arreglo</td><td>[</td><td>11</td><td>6</td></tr>
+<tr><td>0</td><td>NUMERO</td><td>Literal Numérico</td><td>literal numérico</td><td>11</td><td>20</td></tr>
+<tr><td>fin_poncho</td><td>FIN_PONCHO</td><td>Delimitador de Arreglo</td><td>]</td><td>11</td><td>22</td></tr>
+<tr><td>asigna</td><td>PAL_ASIGNA</td><td>Palabra Reservada</td><td>=</td><td>11</td><td>33</td></tr>
+<tr><td>x</td><td>IDENTIFICADOR</td><td>Identificador</td><td>identificador / variable / función</td><td>11</td><td>40</td></tr>
+<tr><td>hecho</td><td>HECHO</td><td>Símbolo/Delimitador</td><td>;</td><td>11</td><td>42</td></tr>
+<tr><td>num</td><td>PAL_NUMERO</td><td>Tipo de Dato</td><td>int</td><td>12</td><td>0</td></tr>
+<tr><td>total</td><td>IDENTIFICADOR</td><td>Identificador</td><td>identificador / variable / función</td><td>12</td><td>4</td></tr>
+<tr><td>asigna</td><td>PAL_ASIGNA</td><td>Palabra Reservada</td><td>=</td><td>12</td><td>10</td></tr>
+<tr><td>duplicar</td><td>IDENTIFICADOR</td><td>Identificador</td><td>identificador / variable / función</td><td>12</td><td>17</td></tr>
+<tr><td>abre</td><td>ABRE</td><td>Símbolo/Delimitador</td><td>(</td><td>12</td><td>26</td></tr>
+<tr><td>datos</td><td>IDENTIFICADOR</td><td>Identificador</td><td>identificador / variable / función</td><td>12</td><td>31</td></tr>
+<tr><td>inicio_poncho</td><td>INICIO_PONCHO</td><td>Delimitador de Arreglo</td><td>[</td><td>12</td><td>37</td></tr>
+<tr><td>0</td><td>NUMERO</td><td>Literal Numérico</td><td>literal numérico</td><td>12</td><td>51</td></tr>
+<tr><td>fin_poncho</td><td>FIN_PONCHO</td><td>Delimitador de Arreglo</td><td>]</td><td>12</td><td>53</td></tr>
+<tr><td>cierra</td><td>CIERRA</td><td>Símbolo/Delimitador</td><td>)</td><td>12</td><td>64</td></tr>
+<tr><td>hecho</td><td>HECHO</td><td>Símbolo/Delimitador</td><td>;</td><td>12</td><td>71</td></tr>
+<tr><td>validar</td><td>PAL_VALIDAR</td><td>Estructura de Control</td><td>if</td><td>14</td><td>0</td></tr>
+<tr><td>abre</td><td>ABRE</td><td>Símbolo/Delimitador</td><td>(</td><td>14</td><td>8</td></tr>
+<tr><td>total</td><td>IDENTIFICADOR</td><td>Identificador</td><td>identificador / variable / función</td><td>14</td><td>13</td></tr>
+<tr><td>supera</td><td>PAL_SUPERA</td><td>Operador Relacional</td><td>&gt;</td><td>14</td><td>19</td></tr>
+<tr><td>contador</td><td>IDENTIFICADOR</td><td>Identificador</td><td>identificador / variable / función</td><td>14</td><td>26</td></tr>
+<tr><td>cierra</td><td>CIERRA</td><td>Símbolo/Delimitador</td><td>)</td><td>14</td><td>35</td></tr>
+<tr><td>contiene</td><td>CONTIENE</td><td>Símbolo/Delimitador</td><td>{</td><td>14</td><td>42</td></tr>
+<tr><td>proyectar</td><td>PAL_PROYECTAR</td><td>Palabra Reservada</td><td>cout / print</td><td>15</td><td>0</td></tr>
+<tr><td>abre</td><td>ABRE</td><td>Símbolo/Delimitador</td><td>(</td><td>15</td><td>10</td></tr>
+<tr><td>total</td><td>IDENTIFICADOR</td><td>Identificador</td><td>identificador / variable / función</td><td>15</td><td>15</td></tr>
+<tr><td>cierra</td><td>CIERRA</td><td>Símbolo/Delimitador</td><td>)</td><td>15</td><td>21</td></tr>
+<tr><td>hecho</td><td>HECHO</td><td>Símbolo/Delimitador</td><td>;</td><td>15</td><td>28</td></tr>
+<tr><td>listo</td><td>LISTO</td><td>Símbolo/Delimitador</td><td>}</td><td>16</td><td>0</td></tr>
+<tr><td>listo</td><td>LISTO</td><td>Símbolo/Delimitador</td><td>}</td><td>18</td><td>0</td></tr>
 </table>
 </body>
 </html>

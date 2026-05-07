@@ -265,9 +265,28 @@ public class AnalizadorSemantico extends GramaticaParserBaseVisitor<TipoDato> {
         TipoDato tipoArreglo = visit(ctx.accesoArreglo());
         TipoDato tipoExpresion = visit(ctx.expresion());
 
+        Token token = ctx.accesoArreglo().IDENTIFICADOR().getSymbol();
+        String nombre = token.getText();
+
+        Simbolo simbolo = tabla.buscar(nombre);
+
+        if (simbolo != null) {
+            String indice = textoLegible(ctx.accesoArreglo().expresion().getText());
+            String valor = textoLegible(ctx.expresion().getText());
+
+            simbolo.setValor("[" + indice + "] = " + valor);
+        }
+
         if (!tipoExpresion.compatibleCon(tipoArreglo)) {
-            Token token = ctx.accesoArreglo().IDENTIFICADOR().getSymbol();
-            agregarError(token, token.getText(), "El valor asignado al arreglo no es compatible. Se esperaba " + tipoArreglo + " y se recibió " + tipoExpresion + ".");
+            agregarError(
+                    token,
+                    token.getText(),
+                    "El valor asignado al arreglo no es compatible. Se esperaba "
+                    + tipoArreglo
+                    + " y se recibió "
+                    + tipoExpresion
+                    + "."
+            );
         }
 
         return TipoDato.VACIO;
@@ -297,7 +316,7 @@ public class AnalizadorSemantico extends GramaticaParserBaseVisitor<TipoDato> {
         if (tipoIndice != TipoDato.NUM && tipoIndice != TipoDato.ERROR) {
             agregarError(tokenId, nombre, "El índice del arreglo '" + nombre + "' debe ser de tipo NUM.");
         }
-
+          simbolo.incrementarUso();
         return simbolo.getTipo();
     }
 
@@ -760,14 +779,19 @@ if (ctx.getText().contains("subir")) {
 
         return TipoDato.ERROR;
     }
-    private String textoLegible(String texto) {
+private String textoLegible(String texto) {
     if (texto == null) {
         return "";
     }
 
     return texto
-            .replace("fin_cadena", " fin_cadena")
-            .replace("cadena", "cadena ")
+            .replace("inicio_poncho", " inicio_poncho ")
+            .replace("fin_poncho", " fin_poncho ")
+            .replace("fin_cadena", " fin_cadena ")
+            .replace("cadena", " cadena ")
+            .replace("abre", " abre ")
+            .replace("cierra", " cierra ")
+            .replace("separa", " separa ")
             .replace("asigna", " asigna ")
             .replace("une", " une ")
             .replace("quita", " quita ")
@@ -782,7 +806,7 @@ if (ctx.getText().contains("subir")) {
             .replace("ajeno", " ajeno ")
             .replace("vinculo", " vinculo ")
             .replace("opcion", " opcion ")
-            .replace("opuesto", "opuesto ")
+            .replace("opuesto", " opuesto ")
             .replaceAll("\\s+", " ")
             .trim();
 }

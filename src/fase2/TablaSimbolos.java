@@ -31,6 +31,8 @@ public class TablaSimbolos {
     private Ambito actual;
 
     public TablaSimbolos() {
+            Simbolo.reiniciarContadorIds();
+
         this.ambitos = new ArrayList<>();
         this.simbolos = new ArrayList<>();
 
