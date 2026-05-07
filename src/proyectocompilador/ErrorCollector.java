@@ -130,7 +130,9 @@ private String construirErrorSintactico(String lexema, String msg) {
         return "La estructura de la instrucción no es válida.";
     }
 
-    if (msg.contains("CADENA_CIERRA")) {
+    String msgLower = msg.toLowerCase();
+
+    if (msg.contains("CADENA_CIERRA") || obtenerElementoFaltante(msg).equals("fin_cadena")) {
         if ("EOF".equals(lexema)) {
             return "El programa terminó inesperadamente. Falta 'fin_cadena' para cerrar la cadena de texto.";
         }
@@ -142,61 +144,124 @@ private String construirErrorSintactico(String lexema, String msg) {
         return "El programa terminó inesperadamente. Puede faltar 'listo', 'hecho', 'cierra' o 'fin_cadena'.";
     }
 
-    if (msg.contains("CADENA_CIERRE_MAL")) {
-        return "El cierre de cadena '" + lexema + "' está mal escrito. Debe usarse 'fin_cadena'.";
-    }
-
-    if (msg.contains("missing")) {
+    if (msgLower.contains("missing")) {
         return construirErrorElementoFaltante(msg);
     }
 
-    if (msg.contains("mismatched input")) {
+    if (msgLower.contains("mismatched input")) {
+        if (esperaba(msg, "hecho")) {
+            return "La palabra o símbolo '" + lexema + "' no es válida en esta posición. Se esperaba 'hecho' para finalizar la instrucción.";
+        }
+
+        if (esperaba(msg, "cierra")) {
+            return "La palabra o símbolo '" + lexema + "' no es válida en esta posición. Se esperaba 'cierra' para cerrar los paréntesis.";
+        }
+
+        if (esperaba(msg, "listo")) {
+            return "La palabra o símbolo '" + lexema + "' no es válida en esta posición. Se esperaba 'listo' para cerrar el bloque.";
+        }
+
+if (esperaba(msg, "verdad") || esperaba(msg, "mentira") || esperaba(msg, "cadena")
+        || esperaba(msg, "NUMERO") || esperaba(msg, "IDENTIFICADOR")) {
+    return "La palabra o símbolo '" + lexema + "' no es válida en esta posición. Se esperaba una expresión válida.";
+}
+
+if (esperaba(msg, "IDENTIFICADOR")) {
+    return "La palabra o símbolo '" + lexema + "' no es válida en esta posición. Se esperaba un identificador válido.";
+}
+
+if (esperaba(msg, "NUMERO")) {
+    return "La palabra o símbolo '" + lexema + "' no es válida en esta posición. Se esperaba un número.";
+}
+
         return "La palabra o símbolo '" + lexema + "' no aparece en una posición válida según la gramática del lenguaje.";
     }
 
-    if (msg.contains("extraneous input")) {
+    if (msgLower.contains("extraneous input")) {
         return "El elemento '" + lexema + "' está de más o fue colocado en una posición incorrecta.";
     }
 
-    if (msg.contains("no viable alternative")) {
+    if (msgLower.contains("no viable alternative")) {
         return "La instrucción cercana a '" + lexema + "' no coincide con ninguna estructura válida del lenguaje.";
     }
 
     return "Error sintáctico cerca de '" + lexema + "'. Revisa el orden y la estructura de la instrucción.";
 }
 
-    private String construirErrorElementoFaltante(String msg) {
-        if (msg.contains("CADENA_CIERRA")) {
-    return "Falta la palabra 'fin_cadena' para cerrar la cadena de texto.";
-}
-        if (msg.contains("HECHO")) {
-            return "Falta la palabra 'hecho' al final de la instrucción.";
-        }
+private String construirErrorElementoFaltante(String msg) {
+    String faltante = obtenerElementoFaltante(msg);
 
-        if (msg.contains("CIERRA")) {
-            return "Falta la palabra 'cierra' para cerrar los paréntesis.";
-        }
-
-        if (msg.contains("ABRE")) {
-            return "Falta la palabra 'abre' para abrir los paréntesis.";
-        }
-
-        if (msg.contains("LISTO")) {
-            return "Falta la palabra 'listo' para cerrar el bloque.";
-        }
-
-        if (msg.contains("CONTIENE")) {
-            return "Falta la palabra 'contiene' para iniciar el bloque.";
-        }
-
-        if (msg.contains("IDENTIFICADOR")) {
-            return "Falta un identificador válido, como el nombre de una variable o función.";
-        }
-
-        if (msg.contains("NUMERO")) {
-            return "Falta un valor numérico.";
-        }
-
-        return "Falta un elemento obligatorio en la instrucción.";
+    if (faltante.equals("fin_cadena")) {
+        return "Falta la palabra 'fin_cadena' para cerrar la cadena de texto.";
     }
+
+    if (faltante.equals("hecho")) {
+        return "Falta la palabra 'hecho' al final de la instrucción.";
+    }
+
+    if (faltante.equals("cierra")) {
+        return "Falta la palabra 'cierra' para cerrar los paréntesis.";
+    }
+
+    if (faltante.equals("abre")) {
+        return "Falta la palabra 'abre' para abrir los paréntesis.";
+    }
+
+    if (faltante.equals("listo")) {
+        return "Falta la palabra 'listo' para cerrar el bloque.";
+    }
+
+    if (faltante.equals("contiene")) {
+        return "Falta la palabra 'contiene' para iniciar el bloque.";
+    }
+
+    if (faltante.equals("IDENTIFICADOR")) {
+        return "Falta un identificador válido, como el nombre de una variable o función.";
+    }
+
+    if (faltante.equals("NUMERO")) {
+        return "Falta un valor numérico.";
+    }
+
+    return "Falta un elemento obligatorio en la instrucción.";
+}
+private String obtenerElementoFaltante(String msg) {
+    if (msg == null) {
+        return "";
+    }
+
+    Pattern patronLiteral = Pattern.compile("missing '(.+?)'");
+    Matcher matcherLiteral = patronLiteral.matcher(msg);
+
+    if (matcherLiteral.find()) {
+        return matcherLiteral.group(1);
+    }
+
+    Pattern patronToken = Pattern.compile("missing ([A-Z_]+)");
+    Matcher matcherToken = patronToken.matcher(msg);
+
+    if (matcherToken.find()) {
+        return matcherToken.group(1);
+    }
+
+    return "";
+}
+private boolean esperaba(String msg, String esperado) {
+    if (msg == null || esperado == null) {
+        return false;
+    }
+
+    String marcador = "expecting";
+    int indice = msg.toLowerCase().indexOf(marcador);
+
+    if (indice == -1) {
+        return false;
+    }
+
+    String parteEsperada = msg.substring(indice).toLowerCase();
+    String esperadoLower = esperado.toLowerCase();
+
+    return parteEsperada.contains("'" + esperadoLower + "'")
+            || parteEsperada.contains(esperadoLower);
+}
 }
