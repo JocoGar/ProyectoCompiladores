@@ -121,39 +121,54 @@ public class ErrorCollector extends BaseErrorListener {
         return "El símbolo '" + lexema + "' no pertenece al lenguaje definido.";
     }
 
-    private String construirErrorSintactico(String lexema, String msg) {
-        if (lexema == null || lexema.trim().isEmpty()) {
-            lexema = "No identificado";
-        }
-
-        if ("EOF".equals(lexema)) {
-            return "El programa terminó inesperadamente. Puede faltar 'listo', 'hecho' o 'cierra'.";
-        }
-
-        if (msg == null) {
-            return "La estructura de la instrucción no es válida.";
-        }
-
-        if (msg.contains("missing")) {
-            return construirErrorElementoFaltante(msg);
-        }
-
-        if (msg.contains("mismatched input")) {
-            return "La palabra o símbolo '" + lexema + "' no aparece en una posición válida según la gramática del lenguaje.";
-        }
-
-        if (msg.contains("extraneous input")) {
-            return "El elemento '" + lexema + "' está de más o fue colocado en una posición incorrecta.";
-        }
-
-        if (msg.contains("no viable alternative")) {
-            return "La instrucción cercana a '" + lexema + "' no coincide con ninguna estructura válida del lenguaje.";
-        }
-
-        return "Error sintáctico cerca de '" + lexema + "'. Revisa el orden y la estructura de la instrucción.";
+private String construirErrorSintactico(String lexema, String msg) {
+    if (lexema == null || lexema.trim().isEmpty()) {
+        lexema = "No identificado";
     }
 
+    if (msg == null) {
+        return "La estructura de la instrucción no es válida.";
+    }
+
+    if (msg.contains("CADENA_CIERRA")) {
+        if ("EOF".equals(lexema)) {
+            return "El programa terminó inesperadamente. Falta 'fin_cadena' para cerrar la cadena de texto.";
+        }
+
+        return "El cierre de cadena '" + lexema + "' no es válido. Debe escribirse exactamente como 'fin_cadena'.";
+    }
+
+    if ("EOF".equals(lexema)) {
+        return "El programa terminó inesperadamente. Puede faltar 'listo', 'hecho', 'cierra' o 'fin_cadena'.";
+    }
+
+    if (msg.contains("CADENA_CIERRE_MAL")) {
+        return "El cierre de cadena '" + lexema + "' está mal escrito. Debe usarse 'fin_cadena'.";
+    }
+
+    if (msg.contains("missing")) {
+        return construirErrorElementoFaltante(msg);
+    }
+
+    if (msg.contains("mismatched input")) {
+        return "La palabra o símbolo '" + lexema + "' no aparece en una posición válida según la gramática del lenguaje.";
+    }
+
+    if (msg.contains("extraneous input")) {
+        return "El elemento '" + lexema + "' está de más o fue colocado en una posición incorrecta.";
+    }
+
+    if (msg.contains("no viable alternative")) {
+        return "La instrucción cercana a '" + lexema + "' no coincide con ninguna estructura válida del lenguaje.";
+    }
+
+    return "Error sintáctico cerca de '" + lexema + "'. Revisa el orden y la estructura de la instrucción.";
+}
+
     private String construirErrorElementoFaltante(String msg) {
+        if (msg.contains("CADENA_CIERRA")) {
+    return "Falta la palabra 'fin_cadena' para cerrar la cadena de texto.";
+}
         if (msg.contains("HECHO")) {
             return "Falta la palabra 'hecho' al final de la instrucción.";
         }
