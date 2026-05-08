@@ -148,8 +148,7 @@ public class GeneradorIntermedioCpp extends GramaticaParserBaseVisitor<Void> {
         String t = "t" + temporal;
 
         if (procesandoGlobales) {
-            // Los temporales de inicialización global se declaran dentro del main,
-            // porque C++ no permite ejecutar asignaciones fuera de funciones.
+
             declaracionesActuales.add("double " + t + ";");
         } else if (cuerpoActual != null) {
             declarar("double " + t + ";", t);
@@ -252,10 +251,10 @@ public class GeneradorIntermedioCpp extends GramaticaParserBaseVisitor<Void> {
 
         codigo.append("int main() {\n");
 
-        // Temporales que se pudieron necesitar para inicializar globales.
+
         codigo.append(declaracionesTemporalesGlobales);
 
-        // Asignaciones de globales, ya sin declararlas como int gi = 1.
+
         codigo.append(inicializacionesGlobales);
 
         if (inicializacionesGlobales.length() > 0) {
@@ -409,9 +408,7 @@ public class GeneradorIntermedioCpp extends GramaticaParserBaseVisitor<Void> {
     public Void visitActualizacion(GramaticaParser.ActualizacionContext ctx) {
         String nombre = ctx.IDENTIFICADOR().getText();
 
-        // Optimización: no se crea temporal para subir/bajar.
-        // Antes: t1 = x + 1; x = t1;
-        // Ahora: x = x + 1;
+
         if (ctx.getText().contains("subir")) {
             escribir(nombre + " = " + nombre + " + 1;");
         } else {
@@ -662,9 +659,6 @@ public class GeneradorIntermedioCpp extends GramaticaParserBaseVisitor<Void> {
             String derecha = expresionAditiva(ctx.expresionAditiva(i));
             String op = operadorCpp(ctx.getChild((i * 2) - 1).getText());
 
-            // Si la comparación se usará directamente como condición,
-            // sigue siendo válido en C++ y evita temporales innecesarios
-            // cuando la expresión completa es simple.
             String t = nuevoTemporal();
             escribir(t + " = " + izquierda + " " + op + " " + derecha + ";");
             izquierda = t;
@@ -714,10 +708,7 @@ public class GeneradorIntermedioCpp extends GramaticaParserBaseVisitor<Void> {
             String valor = expresionUnaria(ctx.expresionUnaria());
             String op = operadorCpp(ctx.getStart().getText());
 
-            // Optimización:
-            // quita 5  -> -5
-            // opuesto ge -> !ge
-            // No hace falta crear temporal para valores simples.
+
             if (esValorSimple(valor)) {
                 return op + valor;
             }
