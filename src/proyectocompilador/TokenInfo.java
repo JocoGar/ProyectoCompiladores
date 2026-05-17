@@ -4,14 +4,13 @@
  */
 package proyectocompilador;
 
-
 public class TokenInfo {
 
-    private final String lexema;
-    private final String token;
-    private final String categoria;
-    private final int linea;
-    private final int columna;
+    private String lexema;
+    private String token;
+    private String categoria;
+    private int linea;
+    private int columna;
 
     public TokenInfo(String lexema, String token, String categoria, int linea, int columna) {
         this.lexema = lexema;
@@ -42,10 +41,13 @@ public class TokenInfo {
     }
 
     public String toHtmlRow() {
+        String equivalenteCpp = CategoriaToken.obtenerEquivalenteCpp(token, lexema);
+
         return "<tr>"
                 + "<td>" + HtmlUtil.escaparHTML(lexema) + "</td>"
                 + "<td>" + HtmlUtil.escaparHTML(token) + "</td>"
                 + "<td>" + HtmlUtil.escaparHTML(categoria) + "</td>"
+                + "<td>" + HtmlUtil.escaparHTML(equivalenteCpp) + "</td>"
                 + "<td>" + linea + "</td>"
                 + "<td>" + columna + "</td>"
                 + "</tr>";

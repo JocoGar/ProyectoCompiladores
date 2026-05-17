@@ -4,6 +4,7 @@
  */
 package proyectocompilador;
 
+import fase2.*;
 import fase2.AnalizadorSemantico;
 import fase2.GeneradorIntermedioCpp;
 import lexerparser.GramaticaLexer;
@@ -21,6 +22,7 @@ public class ServicioCompilador {
 
     public ResultadoCompilacion compilar(String codigoFuente) {
         ResultadoCompilacion resultado = new ResultadoCompilacion();
+            Simbolo.reiniciarContadorIds();
 
         try {
             CharStream input = CharStreams.fromString(codigoFuente);
@@ -133,7 +135,7 @@ public class ServicioCompilador {
         ReporteGenerator.generarHTML(
                 "BitacoraTokens",
                 "Reporte de Tokens",
-                "<th>Lexema</th><th>Token</th><th>Categoría</th><th>Línea</th><th>Columna</th>",
+                "<th>Lexema</th><th>Token</th><th>Categoría</th><th>Equivalente en C++</th><th>Línea</th><th>Columna</th>",
                 filas
         );
     }
@@ -148,7 +150,7 @@ public class ServicioCompilador {
         ReporteGenerator.generarHTML(
                 "BitacoraErrores",
                 "Reporte de Errores Léxicos, Sintácticos y Semánticos",
-                "<th>Tipo</th><th>Línea</th><th>Columna</th><th>Lexema</th><th>Mensaje</th>",
+                "<th>Tipo</th><th>Línea</th><th>Columna</th><th>Lexema</th><th>Mensaje</th><th>Equivalencia C++</th>",
                 filas
         );
     }
@@ -157,7 +159,7 @@ public class ServicioCompilador {
         ReporteGenerator.generarHTML(
                 "BitacoraTokens",
                 "Reporte de Tokens",
-                "<th>Lexema</th><th>Token</th><th>Categoría</th><th>Línea</th><th>Columna</th>",
+                "<th>Lexema</th><th>Token</th><th>Categoría</th><th>Equivalente en C++</th><th>Línea</th><th>Columna</th>",
                 new ArrayList<>()
         );
     }
@@ -166,20 +168,33 @@ public class ServicioCompilador {
         ReporteGenerator.generarHTML(
                 "BitacoraErrores",
                 "Reporte de Errores Léxicos, Sintácticos y Semánticos",
-                "<th>Tipo</th><th>Línea</th><th>Columna</th><th>Lexema</th><th>Mensaje</th>",
+                "<th>Tipo</th><th>Línea</th><th>Columna</th><th>Lexema</th><th>Mensaje</th><th>Equivalencia C++</th>",
                 new ArrayList<>()
         );
     }
 
-    private void generarTablaSimbolosVacia() {
-        ReporteGenerator.generarHTML(
-                "TablaSimbolos",
-                "Tabla de Símbolos",
-                "<th>Nombre</th><th>Tipo</th><th>Rol</th><th>Ámbito</th><th>Clase Ámbito</th><th>Nivel</th><th>Línea</th><th>Columna</th><th>Tamaño Arreglo</th><th>Parámetros</th>",
-                new ArrayList<>()
-        );
-    }
-
+private void generarTablaSimbolosVacia() {
+    ReporteGenerator.generarHTML(
+            "TablaSimbolos",
+            "Tabla de Símbolos",
+            "<th>ID</th>"
+            + "<th>Nombre</th>"
+            + "<th>Evento</th>"
+            + "<th>Tipo</th>"
+            + "<th>Rol</th>"
+            + "<th>Ámbito</th>"
+            + "<th>Clase Ámbito</th>"
+            + "<th>Nivel</th>"
+            + "<th>Línea</th>"
+            + "<th>Columna</th>"
+            + "<th>Última expresión asignada</th>"
+            + "<th>Cantidad de usos</th>"
+            + "<th>Tamaño arreglo</th>"
+            + "<th>Cantidad parámetros</th>"
+            + "<th>Tipos parámetros</th>",
+            new ArrayList<>()
+    );
+}
     private void generarCodigoIntermedioVacio() {
         try (PrintWriter pw = new PrintWriter("CodigoIntermedio.cpp", "UTF-8")) {
             pw.println("// No se generó código intermedio porque existen errores léxicos, sintácticos o semánticos.");

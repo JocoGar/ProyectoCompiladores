@@ -178,13 +178,15 @@ public class AnalizadorSemantico extends GramaticaParserBaseVisitor<TipoDato> {
             agregarError(tokenId, nombre, "La variable '" + nombre + "' ya fue declarada en este ámbito.");
         }
 
-        if (ctx.expresion() != null) {
-            TipoDato tipoExpresion = visit(ctx.expresion());
+            if (ctx.expresion() != null) {
+        simbolo.setValor(textoLegible(ctx.expresion().getText()));
 
-            if (!tipoExpresion.compatibleCon(tipo)) {
-                agregarError(tokenId, nombre, "No se puede asignar una expresión de tipo " + tipoExpresion + " a la variable '" + nombre + "' de tipo " + tipo + ".");
-            }
+        TipoDato tipoExpresion = visit(ctx.expresion());
+
+        if (!tipoExpresion.compatibleCon(tipo)) {
+            agregarError(tokenId, nombre, "No se puede asignar una expresión de tipo " + tipoExpresion + " a la variable '" + nombre + "' de tipo " + tipo + ".");
         }
+            }
 
         return TipoDato.VACIO;
     }
@@ -246,6 +248,9 @@ public class AnalizadorSemantico extends GramaticaParserBaseVisitor<TipoDato> {
             return TipoDato.ERROR;
         }
 
+        simbolo.incrementarUso();
+        simbolo.setValor(textoLegible(ctx.expresion().getText()));
+
         TipoDato tipoExpresion = visit(ctx.expresion());
 
         if (!tipoExpresion.compatibleCon(simbolo.getTipo())) {
@@ -260,9 +265,28 @@ public class AnalizadorSemantico extends GramaticaParserBaseVisitor<TipoDato> {
         TipoDato tipoArreglo = visit(ctx.accesoArreglo());
         TipoDato tipoExpresion = visit(ctx.expresion());
 
+        Token token = ctx.accesoArreglo().IDENTIFICADOR().getSymbol();
+        String nombre = token.getText();
+
+        Simbolo simbolo = tabla.buscar(nombre);
+
+        if (simbolo != null) {
+            String indice = textoLegible(ctx.accesoArreglo().expresion().getText());
+            String valor = textoLegible(ctx.expresion().getText());
+
+            simbolo.setValor("[" + indice + "] = " + valor);
+        }
+
         if (!tipoExpresion.compatibleCon(tipoArreglo)) {
-            Token token = ctx.accesoArreglo().IDENTIFICADOR().getSymbol();
-            agregarError(token, token.getText(), "El valor asignado al arreglo no es compatible. Se esperaba " + tipoArreglo + " y se recibió " + tipoExpresion + ".");
+            agregarError(
+                    token,
+                    token.getText(),
+                    "El valor asignado al arreglo no es compatible. Se esperaba "
+                    + tipoArreglo
+                    + " y se recibió "
+                    + tipoExpresion
+                    + "."
+            );
         }
 
         return TipoDato.VACIO;
@@ -292,7 +316,7 @@ public class AnalizadorSemantico extends GramaticaParserBaseVisitor<TipoDato> {
         if (tipoIndice != TipoDato.NUM && tipoIndice != TipoDato.ERROR) {
             agregarError(tokenId, nombre, "El índice del arreglo '" + nombre + "' debe ser de tipo NUM.");
         }
-
+          simbolo.incrementarUso();
         return simbolo.getTipo();
     }
 
@@ -312,7 +336,13 @@ public class AnalizadorSemantico extends GramaticaParserBaseVisitor<TipoDato> {
             agregarError(tokenId, nombre, "Solo se puede usar subir/bajar con variables numéricas.");
             return TipoDato.ERROR;
         }
+simbolo.incrementarUso();
 
+if (ctx.getText().contains("subir")) {
+    simbolo.setValor(nombre + " subir");
+} else {
+    simbolo.setValor(nombre + " bajar");
+}
         return TipoDato.VACIO;
     }
 
@@ -337,6 +367,8 @@ public class AnalizadorSemantico extends GramaticaParserBaseVisitor<TipoDato> {
         }
 
         if (ctx.expresion() != null) {
+            simbolo.setValor(textoLegible(ctx.expresion().getText()));
+
             TipoDato tipoExpresion = visit(ctx.expresion());
 
             if (!tipoExpresion.compatibleCon(tipo)) {
@@ -383,6 +415,7 @@ public class AnalizadorSemantico extends GramaticaParserBaseVisitor<TipoDato> {
             }
             return TipoDato.ERROR;
         }
+        funcion.incrementarUso();
 
         int esperados = funcion.getParametros().size();
         int recibidos = ctx.argumentos() == null ? 0 : ctx.argumentos().expresion().size();
@@ -456,6 +489,9 @@ public class AnalizadorSemantico extends GramaticaParserBaseVisitor<TipoDato> {
                 return TipoDato.ERROR;
             }
 
+            simbolo.incrementarUso();
+            simbolo.setValor("entrada_usuario");
+
             return simbolo.getTipo();
         }
 
@@ -513,7 +549,7 @@ public class AnalizadorSemantico extends GramaticaParserBaseVisitor<TipoDato> {
 
     @Override
     public TipoDato visitEstructuraPara(GramaticaParser.EstructuraParaContext ctx) {
-        tabla.entrarAmbito("bloque_loop_l" + ctx.getStart().getLine());
+        tabla.entrarAmbito("bloque_for_linea" + ctx.getStart().getLine());
 
         if (ctx.inicializacionPara() != null) {
             visit(ctx.inicializacionPara());
@@ -724,6 +760,8 @@ public class AnalizadorSemantico extends GramaticaParserBaseVisitor<TipoDato> {
                 return TipoDato.ERROR;
             }
 
+            simbolo.incrementarUso();
+
             return simbolo.getTipo();
         }
 
@@ -741,4 +779,35 @@ public class AnalizadorSemantico extends GramaticaParserBaseVisitor<TipoDato> {
 
         return TipoDato.ERROR;
     }
+private String textoLegible(String texto) {
+    if (texto == null) {
+        return "";
+    }
+
+    return texto
+            .replace("inicio_poncho", " inicio_poncho ")
+            .replace("fin_poncho", " fin_poncho ")
+            .replace("fin_cadena", " fin_cadena ")
+            .replace("cadena", " cadena ")
+            .replace("abre", " abre ")
+            .replace("cierra", " cierra ")
+            .replace("separa", " separa ")
+            .replace("asigna", " asigna ")
+            .replace("une", " une ")
+            .replace("quita", " quita ")
+            .replace("veces", " veces ")
+            .replace("reparte", " reparte ")
+            .replace("sobra", " sobra ")
+            .replace("supera", " supera ")
+            .replace("bajo", " bajo ")
+            .replace("minimo", " minimo ")
+            .replace("tope", " tope ")
+            .replace("calca", " calca ")
+            .replace("ajeno", " ajeno ")
+            .replace("vinculo", " vinculo ")
+            .replace("opcion", " opcion ")
+            .replace("opuesto", " opuesto ")
+            .replaceAll("\\s+", " ")
+            .trim();
+}
 }
