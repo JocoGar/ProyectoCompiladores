@@ -29,6 +29,42 @@ public class GramaticaParserBaseListener implements GramaticaParserListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterSeccionRegistros(GramaticaParser.SeccionRegistrosContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitSeccionRegistros(GramaticaParser.SeccionRegistrosContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterDeclaracionRegistro(GramaticaParser.DeclaracionRegistroContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitDeclaracionRegistro(GramaticaParser.DeclaracionRegistroContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterCampoRegistro(GramaticaParser.CampoRegistroContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitCampoRegistro(GramaticaParser.CampoRegistroContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterSeccionGlobales(GramaticaParser.SeccionGlobalesContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -185,6 +221,18 @@ public class GramaticaParserBaseListener implements GramaticaParserListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterInicializadorLista(GramaticaParser.InicializadorListaContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitInicializadorLista(GramaticaParser.InicializadorListaContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterAsignacion(GramaticaParser.AsignacionContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -197,13 +245,25 @@ public class GramaticaParserBaseListener implements GramaticaParserListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterAsignacionArreglo(GramaticaParser.AsignacionArregloContext ctx) { }
+	@Override public void enterAsignacionCompuesta(GramaticaParser.AsignacionCompuestaContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitAsignacionArreglo(GramaticaParser.AsignacionArregloContext ctx) { }
+	@Override public void exitAsignacionCompuesta(GramaticaParser.AsignacionCompuestaContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterDestinoAsignacion(GramaticaParser.DestinoAsignacionContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitDestinoAsignacion(GramaticaParser.DestinoAsignacionContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -533,6 +593,18 @@ public class GramaticaParserBaseListener implements GramaticaParserListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterAccesoCampo(GramaticaParser.AccesoCampoContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitAccesoCampo(GramaticaParser.AccesoCampoContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterAccesoArreglo(GramaticaParser.AccesoArregloContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -576,6 +648,18 @@ public class GramaticaParserBaseListener implements GramaticaParserListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitTipoVariable(GramaticaParser.TipoVariableContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterTipoGeneral(GramaticaParser.TipoGeneralContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitTipoGeneral(GramaticaParser.TipoGeneralContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *

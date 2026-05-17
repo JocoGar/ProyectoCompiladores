@@ -32,7 +32,7 @@ ENTONCES       : 'entonces' ;
 
 // Control de flujo
 PAL_PARAR      : 'parar' ;
-PAL_SALTAR     : 'saltar' ;
+PAL_SALTAR     : 'saltp' ;
 PAL_DAR        : 'dar' ;
 PAL_RAIZ       : 'raiz' ;
 
@@ -63,6 +63,20 @@ PAL_OPUESTO    : 'opuesto' ;
 // Incremento / decremento
 PAL_SUBIR      : 'subir' ;
 PAL_BAJAR      : 'bajar' ;
+
+// Registros / estructuras
+PAL_REGISTRO   : 'registro' ;
+PAL_CAMPO      : 'campo' ;
+PAL_REFERENCIA : 'referencia' ;
+
+// Asignaciones compuestas
+PAL_AUMENTA    : 'aumenta' ;
+PAL_REDUCE     : 'reduce' ;
+PAL_ESCALA     : 'escala' ;
+PAL_DIVIDE     : 'divide' ;
+
+// Literal especial
+PAL_SALTO      : 'salto' ;
 
 // Delimitadores
 CONTIENE       : 'contiene' ;

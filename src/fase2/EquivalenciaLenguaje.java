@@ -72,6 +72,20 @@ public class EquivalenciaLenguaje {
         // Incremento / decremento
         equivalencias.put("subir", "++");
         equivalencias.put("bajar", "--");
+        
+        // Registros / estructuras
+        equivalencias.put("registro", "estructura de datos");
+        equivalencias.put("campo", "acceso a campo");
+        equivalencias.put("referencia", "paso por referencia");
+
+        // Asignaciones compuestas
+        equivalencias.put("aumenta", "asignación con suma");
+        equivalencias.put("reduce", "asignación con resta");
+        equivalencias.put("escala", "asignación con multiplicación");
+        equivalencias.put("divide", "asignación con división");
+
+        // Literal especial
+        equivalencias.put("salto", "salto de línea");
 
         // Delimitadores
         equivalencias.put("contiene", "{");
@@ -164,6 +178,8 @@ public class EquivalenciaLenguaje {
                 return "bool";
             case "VACIO":
                 return "void";
+                case "REGISTRO":
+    return "struct";
             default:
                 return "";
         }

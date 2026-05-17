@@ -4,11 +4,24 @@ options { tokenVocab=GramaticaLexer; }
 
 
 programa
-    : seccionGlobales
+    : seccionRegistros
+      seccionGlobales
       seccionFunciones
       bloquePrincipal
       comentariosFinales
       EOF
+    ;
+
+seccionRegistros
+    : (comentario | declaracionRegistro)*
+    ;
+
+declaracionRegistro
+    : PAL_REGISTRO IDENTIFICADOR CONTIENE campoRegistro* LISTO
+    ;
+
+campoRegistro
+    : tipoGeneral IDENTIFICADOR HECHO
     ;
 
 seccionGlobales
@@ -50,7 +63,7 @@ parametros
     ;
 
 parametro
-    : tipoVariable IDENTIFICADOR
+    : PAL_REFERENCIA? tipoGeneral IDENTIFICADOR
     ;
 
 /* 
@@ -73,7 +86,7 @@ instruccion
     : declaracionVariable
     | declaracionArreglo
     | asignacion HECHO
-    | asignacionArreglo HECHO
+    | asignacionCompuesta HECHO
     | actualizacion HECHO
     | instruccionImprimir HECHO
     | instruccionCaptar HECHO
@@ -88,21 +101,30 @@ instruccion
     ;
 
 declaracionVariable
-    : tipoVariable IDENTIFICADOR (PAL_ASIGNA expresion)? HECHO
+    : tipoGeneral IDENTIFICADOR (PAL_ASIGNA (expresion | inicializadorLista))? HECHO
     ;
 
 declaracionArreglo
-    : tipoVariable IDENTIFICADOR INICIO_PONCHO NUMERO FIN_PONCHO HECHO
+    : tipoGeneral IDENTIFICADOR INICIO_PONCHO NUMERO? FIN_PONCHO (PAL_ASIGNA inicializadorLista)? HECHO
+    ;
+
+inicializadorLista
+    : CONTIENE expresion (SEPARA expresion)* LISTO
     ;
 
 asignacion
-    : IDENTIFICADOR PAL_ASIGNA expresion
+    : destinoAsignacion PAL_ASIGNA expresion
     ;
 
-asignacionArreglo
-    : accesoArreglo PAL_ASIGNA expresion
+asignacionCompuesta
+    : destinoAsignacion (PAL_AUMENTA | PAL_REDUCE | PAL_ESCALA | PAL_DIVIDE) expresion
     ;
 
+destinoAsignacion
+    : IDENTIFICADOR
+    | accesoArreglo
+    | accesoCampo
+    ;
 /* 
    ENTRADA / SALIDA
 */
@@ -116,8 +138,7 @@ instruccionCaptar
     ;
 
 destinoEntrada
-    : IDENTIFICADOR
-    | accesoArreglo
+    : destinoAsignacion
     ;
 
 /* 
@@ -162,13 +183,13 @@ asignacionSimple
 actualizacionPara
     : actualizacion
     | asignacionSimple
+    | asignacionCompuesta
     ;
 
 actualizacion
-    : IDENTIFICADOR (PAL_SUBIR | PAL_BAJAR)
-    | (PAL_SUBIR | PAL_BAJAR) IDENTIFICADOR
+    : destinoAsignacion (PAL_SUBIR | PAL_BAJAR)
+    | (PAL_SUBIR | PAL_BAJAR) destinoAsignacion
     ;
-
 /* 
    SWITCH / CASE
 */
@@ -251,9 +272,12 @@ expresionPrimaria
     : ABRE expresion CIERRA
     | llamadaFuncion
     | accesoArreglo
+    | accesoCampo
     | literal
     ;
-
+accesoCampo
+    : IDENTIFICADOR (PAL_CAMPO IDENTIFICADOR)+
+    ;
 /* 
    ARREGLOS
 */
@@ -272,6 +296,7 @@ literal
     | cadenaLiteral
     | PAL_VERDAD
     | PAL_MENTIRA
+    | PAL_SALTO
     ;
 
 cadenaLiteral
@@ -287,7 +312,12 @@ tipoVariable
     | PAL_ESTADO
     ;
 
-tipoRetorno
+tipoGeneral
     : tipoVariable
+    | IDENTIFICADOR
+    ;
+
+tipoRetorno
+    : tipoGeneral
     | PAL_VACIO
     ;

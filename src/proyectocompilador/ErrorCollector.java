@@ -340,6 +340,18 @@ private String sugerirPalabraDelLenguaje(String simboloCpp) {
             return "entonces";
         case "\"":
             return "cadena / fin_cadena";
+            case ".":
+            return "campo";
+        case "+=":
+            return "aumenta";
+        case "-=":
+            return "reduce";
+        case "*=":
+            return "escala";
+        case "/=":
+            return "divide";
+        case "&":
+            return "referencia";
         default:
             return "";
     }

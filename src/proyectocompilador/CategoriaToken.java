@@ -102,6 +102,24 @@ public class CategoriaToken {
             case "INICIO_PONCHO":
             case "FIN_PONCHO":
                 return "Delimitador de Arreglo";
+                
+                case "PAL_REGISTRO":
+    return "Registro/Estructura";
+
+            case "PAL_CAMPO":
+                return "Acceso a Campo";
+
+            case "PAL_REFERENCIA":
+                return "Referencia";
+
+            case "PAL_AUMENTA":
+            case "PAL_REDUCE":
+            case "PAL_ESCALA":
+            case "PAL_DIVIDE":
+                return "Asignación Compuesta";
+
+            case "PAL_SALTO":
+                return "Literal Especial";
 
             default:
                 return "Otros";
@@ -113,7 +131,22 @@ public class CategoriaToken {
         }
 
         switch (nombreToken) {
-
+            case "PAL_REGISTRO":
+                return "estructura de datos";
+            case "PAL_CAMPO":
+                return "acceso a campo";
+            case "PAL_REFERENCIA":
+                return "paso por referencia";
+            case "PAL_AUMENTA":
+                return "asignación con suma";
+            case "PAL_REDUCE":
+                return "asignación con resta";
+            case "PAL_ESCALA":
+                return "asignación con multiplicación";
+            case "PAL_DIVIDE":
+                return "asignación con división";
+            case "PAL_SALTO":
+                return "salto de línea";
             // ==========================
             // Tipos de datos
             // ==========================
@@ -218,7 +251,7 @@ public class CategoriaToken {
 
             // ==========================
             // Switch / Case
-            // Según tu gramática actual
+            // Según la gramática actual
             // ==========================
             case "PAL_LIGHT":
                 return "switch";

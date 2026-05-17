@@ -23,6 +23,7 @@ public class GeneradorIntermedioCpp extends GramaticaParserBaseVisitor<Void> {
     private final StringBuilder codigo;
     private final StringBuilder funciones;
     private final StringBuilder inicializacionesGlobales;
+    private final StringBuilder registros;
 
     private final List<String> declaracionesGlobales;
     private final Set<String> globalesDeclaradas;
@@ -42,6 +43,7 @@ public class GeneradorIntermedioCpp extends GramaticaParserBaseVisitor<Void> {
     public GeneradorIntermedioCpp() {
         this.codigo = new StringBuilder();
         this.funciones = new StringBuilder();
+        this.registros = new StringBuilder();
         this.inicializacionesGlobales = new StringBuilder();
 
         this.declaracionesGlobales = new ArrayList<>();
@@ -162,26 +164,26 @@ public class GeneradorIntermedioCpp extends GramaticaParserBaseVisitor<Void> {
         return "L" + etiqueta;
     }
 
-    private String tipoCpp(String tipo) {
-        switch (tipo) {
-            case "num":
-                return "int";
-            case "real":
-                return "float";
-            case "preciso":
-                return "double";
-            case "signo":
-                return "char";
-            case "text":
-                return "string";
-            case "estado":
-                return "bool";
-            case "empty":
-                return "void";
-            default:
-                return "auto";
-        }
+private String tipoCpp(String tipo) {
+    switch (tipo) {
+        case "num":
+            return "int";
+        case "real":
+            return "float";
+        case "preciso":
+            return "double";
+        case "signo":
+            return "char";
+        case "text":
+            return "string";
+        case "estado":
+            return "bool";
+        case "empty":
+            return "void";
+        default:
+            return tipo;
     }
+}
 
     private String operadorCpp(String op) {
         switch (op) {
@@ -213,6 +215,14 @@ public class GeneradorIntermedioCpp extends GramaticaParserBaseVisitor<Void> {
                 return "||";
             case "opuesto":
                 return "!";
+            case "aumenta":
+                return "+=";
+            case "reduce":
+                return "-=";
+            case "escala":
+                return "*=";
+            case "divide":
+                return "/=";
             default:
                 return op;
         }
@@ -224,9 +234,18 @@ public class GeneradorIntermedioCpp extends GramaticaParserBaseVisitor<Void> {
         codigo.append("#include <string>\n");
         codigo.append("using namespace std;\n\n");
 
-        codigo.append("// Codigo de tres direcciones\n");
+        codigo.append("// Codigo de tres direcciones\n\n");
+
+        visit(ctx.seccionRegistros());
+
+        codigo.append(registros);
+
+        if (registros.length() > 0) {
+            codigo.append("\n");
+        }
 
         procesandoGlobales = true;
+
         iniciarBloque();
         visit(ctx.seccionGlobales());
         String declaracionesTemporalesGlobales = finalizarBloque();
@@ -269,6 +288,26 @@ public class GeneradorIntermedioCpp extends GramaticaParserBaseVisitor<Void> {
     }
 
     @Override
+public Void visitDeclaracionRegistro(GramaticaParser.DeclaracionRegistroContext ctx) {
+    String nombre = ctx.IDENTIFICADOR().getText();
+
+    registros.append("struct ")
+            .append(nombre)
+            .append(" {\n");
+
+    for (GramaticaParser.CampoRegistroContext campo : ctx.campoRegistro()) {
+        registros.append("    ")
+                .append(tipoCpp(campo.tipoGeneral().getText()))
+                .append(" ")
+                .append(campo.IDENTIFICADOR().getText())
+                .append(";\n");
+    }
+
+    registros.append("};\n");
+
+    return null;
+}
+    @Override
     public Void visitDeclaracionFuncion(GramaticaParser.DeclaracionFuncionContext ctx) {
         String tipo = tipoCpp(ctx.tipoRetorno().getText());
         String nombre = ctx.IDENTIFICADOR().getText();
@@ -283,9 +322,15 @@ public class GeneradorIntermedioCpp extends GramaticaParserBaseVisitor<Void> {
                     parametros.append(", ");
                 }
 
-                parametros.append(tipoCpp(p.tipoVariable().getText()))
-                        .append(" ")
-                        .append(p.IDENTIFICADOR().getText());
+            parametros.append(tipoCpp(p.tipoGeneral().getText()));
+
+            if (p.PAL_REFERENCIA() != null) {
+                parametros.append(" &");
+            } else {
+                parametros.append(" ");
+            }
+
+            parametros.append(p.IDENTIFICADOR().getText());
             }
         }
 
@@ -311,64 +356,84 @@ public class GeneradorIntermedioCpp extends GramaticaParserBaseVisitor<Void> {
         return null;
     }
 
-    @Override
-    public Void visitDeclaracionVariable(GramaticaParser.DeclaracionVariableContext ctx) {
-        String tipo = tipoCpp(ctx.tipoVariable().getText());
-        String nombre = ctx.IDENTIFICADOR().getText();
+        @Override
+        public Void visitDeclaracionVariable(GramaticaParser.DeclaracionVariableContext ctx) {
+            String tipo = tipoCpp(ctx.tipoGeneral().getText());
+            String nombre = ctx.IDENTIFICADOR().getText();
 
-        if (procesandoGlobales) {
-            declararGlobal(tipo + " " + nombre + ";", nombre);
+            if (procesandoGlobales) {
+                declararGlobal(tipo + " " + nombre + ";", nombre);
+
+                if (ctx.expresion() != null) {
+                    String valor = generarExpresion(ctx.expresion());
+                    escribir(nombre + " = " + valor + ";");
+                } else if (ctx.inicializadorLista() != null) {
+                    escribir(nombre + " = " + inicializadorLista(ctx.inicializadorLista()) + ";");
+                }
+
+                return null;
+            }
+
+            declarar(tipo + " " + nombre + ";", nombre);
 
             if (ctx.expresion() != null) {
                 String valor = generarExpresion(ctx.expresion());
                 escribir(nombre + " = " + valor + ";");
+            } else if (ctx.inicializadorLista() != null) {
+                escribir(nombre + " = " + inicializadorLista(ctx.inicializadorLista()) + ";");
             }
 
             return null;
         }
 
-        declarar(tipo + " " + nombre + ";", nombre);
+@Override
+public Void visitDeclaracionArreglo(GramaticaParser.DeclaracionArregloContext ctx) {
+    String tipo = tipoCpp(ctx.tipoGeneral().getText());
+    String nombre = ctx.IDENTIFICADOR().getText();
 
-        if (ctx.expresion() != null) {
-            String valor = generarExpresion(ctx.expresion());
-            escribir(nombre + " = " + valor + ";");
-        }
+    String tamanio = "";
 
-        return null;
+    if (ctx.NUMERO() != null) {
+        tamanio = ctx.NUMERO().getText();
+    } else if (ctx.inicializadorLista() != null) {
+        tamanio = String.valueOf(ctx.inicializadorLista().expresion().size());
     }
 
-    @Override
-    public Void visitDeclaracionArreglo(GramaticaParser.DeclaracionArregloContext ctx) {
-        String tipo = tipoCpp(ctx.tipoVariable().getText());
-        String nombre = ctx.IDENTIFICADOR().getText();
-        String tamanio = ctx.NUMERO().getText();
+    String declaracion = tipo + " " + nombre + "[" + tamanio + "]";
 
-        if (procesandoGlobales) {
-            declararGlobal(tipo + " " + nombre + "[" + tamanio + "];", nombre);
-        } else {
-            declarar(tipo + " " + nombre + "[" + tamanio + "];", nombre);
-        }
-
-        return null;
+    if (ctx.inicializadorLista() != null) {
+        declaracion += " = " + inicializadorLista(ctx.inicializadorLista());
     }
 
-    @Override
-    public Void visitAsignacion(GramaticaParser.AsignacionContext ctx) {
-        String nombre = ctx.IDENTIFICADOR().getText();
-        String valor = generarExpresion(ctx.expresion());
+    declaracion += ";";
 
-        escribir(nombre + " = " + valor + ";");
-        return null;
+    if (procesandoGlobales) {
+        declararGlobal(declaracion, nombre);
+    } else {
+        declarar(declaracion, nombre);
     }
 
-    @Override
-    public Void visitAsignacionArreglo(GramaticaParser.AsignacionArregloContext ctx) {
-        String destino = accesoArreglo(ctx.accesoArreglo());
-        String valor = generarExpresion(ctx.expresion());
+    return null;
+}
 
-        escribir(destino + " = " + valor + ";");
-        return null;
-    }
+@Override
+public Void visitAsignacion(GramaticaParser.AsignacionContext ctx) {
+    String destino = destinoAsignacion(ctx.destinoAsignacion());
+    String valor = generarExpresion(ctx.expresion());
+
+    escribir(destino + " = " + valor + ";");
+    return null;
+}
+
+@Override
+public Void visitAsignacionCompuesta(GramaticaParser.AsignacionCompuestaContext ctx) {
+    String destino = destinoAsignacion(ctx.destinoAsignacion());
+    String valor = generarExpresion(ctx.expresion());
+    String operador = operadorCpp(ctx.getChild(1).getText());
+
+    escribir(destino + " " + operador + " " + valor + ";");
+    return null;
+}
 
     @Override
     public Void visitInstruccionImprimir(GramaticaParser.InstruccionImprimirContext ctx) {
@@ -378,19 +443,13 @@ public class GeneradorIntermedioCpp extends GramaticaParserBaseVisitor<Void> {
         return null;
     }
 
-    @Override
-    public Void visitInstruccionCaptar(GramaticaParser.InstruccionCaptarContext ctx) {
-        String destino;
+@Override
+public Void visitInstruccionCaptar(GramaticaParser.InstruccionCaptarContext ctx) {
+    String destino = destinoAsignacion(ctx.destinoEntrada().destinoAsignacion());
 
-        if (ctx.destinoEntrada().IDENTIFICADOR() != null) {
-            destino = ctx.destinoEntrada().IDENTIFICADOR().getText();
-        } else {
-            destino = accesoArreglo(ctx.destinoEntrada().accesoArreglo());
-        }
-
-        escribir("cin >> " + destino + ";");
-        return null;
-    }
+    escribir("cin >> " + destino + ";");
+    return null;
+}
 
     @Override
     public Void visitInstruccionRetorno(GramaticaParser.InstruccionRetornoContext ctx) {
@@ -406,7 +465,7 @@ public class GeneradorIntermedioCpp extends GramaticaParserBaseVisitor<Void> {
 
     @Override
     public Void visitActualizacion(GramaticaParser.ActualizacionContext ctx) {
-        String nombre = ctx.IDENTIFICADOR().getText();
+        String nombre = destinoAsignacion(ctx.destinoAsignacion());
 
 
         if (ctx.getText().contains("subir")) {
@@ -623,15 +682,23 @@ public class GeneradorIntermedioCpp extends GramaticaParserBaseVisitor<Void> {
         }
     }
 
-    private void generarActualizacionPara(GramaticaParser.ActualizacionParaContext ctx) {
-        if (ctx.actualizacion() != null) {
-            visit(ctx.actualizacion());
-        } else {
-            GramaticaParser.AsignacionSimpleContext a = ctx.asignacionSimple();
-            String valor = generarExpresion(a.expresion());
-            escribir(a.IDENTIFICADOR().getText() + " = " + valor + ";");
-        }
+private void generarActualizacionPara(GramaticaParser.ActualizacionParaContext ctx) {
+    if (ctx.actualizacion() != null) {
+        visit(ctx.actualizacion());
+        return;
     }
+
+    if (ctx.asignacionSimple() != null) {
+        GramaticaParser.AsignacionSimpleContext a = ctx.asignacionSimple();
+        String valor = generarExpresion(a.expresion());
+        escribir(a.IDENTIFICADOR().getText() + " = " + valor + ";");
+        return;
+    }
+
+    if (ctx.asignacionCompuesta() != null) {
+        visit(ctx.asignacionCompuesta());
+    }
+}
 
     private String generarExpresion(GramaticaParser.ExpresionContext ctx) {
         return expresionLogica(ctx.expresionLogica());
@@ -726,14 +793,16 @@ public class GeneradorIntermedioCpp extends GramaticaParserBaseVisitor<Void> {
             return generarExpresion(ctx.expresion());
         }
 
-        if (ctx.llamadaFuncion() != null) {
-            String t = nuevoTemporal();
-            escribir(t + " = " + llamadaFuncion(ctx.llamadaFuncion()) + ";");
-            return t;
-        }
+if (ctx.llamadaFuncion() != null) {
+    return llamadaFuncion(ctx.llamadaFuncion());
+}
 
         if (ctx.accesoArreglo() != null) {
-            return accesoArreglo(ctx.accesoArreglo());
+    return accesoArreglo(ctx.accesoArreglo());
+        }
+
+        if (ctx.accesoCampo() != null) {
+            return accesoCampo(ctx.accesoCampo());
         }
 
         return literal(ctx.literal());
@@ -783,6 +852,9 @@ public class GeneradorIntermedioCpp extends GramaticaParserBaseVisitor<Void> {
         if (ctx.PAL_MENTIRA() != null) {
             return "false";
         }
+        if (ctx.PAL_SALTO() != null) {
+            return "\"\\n\"";
+            }
 
         return "";
     }
@@ -841,4 +913,50 @@ public class GeneradorIntermedioCpp extends GramaticaParserBaseVisitor<Void> {
 
         return "";
     }
+    
+    private String accesoCampo(GramaticaParser.AccesoCampoContext ctx) {
+    StringBuilder sb = new StringBuilder();
+
+    sb.append(ctx.IDENTIFICADOR(0).getText());
+
+    for (int i = 1; i < ctx.IDENTIFICADOR().size(); i++) {
+        sb.append(".").append(ctx.IDENTIFICADOR(i).getText());
+    }
+
+    return sb.toString();
+}
+
+private String destinoAsignacion(GramaticaParser.DestinoAsignacionContext ctx) {
+    if (ctx.IDENTIFICADOR() != null) {
+        return ctx.IDENTIFICADOR().getText();
+    }
+
+    if (ctx.accesoArreglo() != null) {
+        return accesoArreglo(ctx.accesoArreglo());
+    }
+
+    if (ctx.accesoCampo() != null) {
+        return accesoCampo(ctx.accesoCampo());
+    }
+
+    return "";
+}
+
+private String inicializadorLista(GramaticaParser.InicializadorListaContext ctx) {
+    StringBuilder sb = new StringBuilder();
+
+    sb.append("{");
+
+    for (int i = 0; i < ctx.expresion().size(); i++) {
+        if (i > 0) {
+            sb.append(", ");
+        }
+
+        sb.append(generarExpresion(ctx.expresion(i)));
+    }
+
+    sb.append("}");
+
+    return sb.toString();
+}
 }
