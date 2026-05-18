@@ -6,7 +6,7 @@ package fase2;
 
 /**
  *
- * @author 1jose
+ * @author 1jose.
  */
 
 import java.util.ArrayList;
