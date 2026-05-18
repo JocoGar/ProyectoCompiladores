@@ -53,17 +53,14 @@ public boolean compatibleCon(TipoDato destino) {
         return true;
     }
 
-    // NUM es entero. No acepta REAL ni PRECISO.
     if (destino == NUM) {
         return this == NUM;
     }
 
-    // REAL acepta enteros y reales, pero no preciso si quieres evitar pérdida de precisión.
     if (destino == REAL) {
         return this == NUM || this == REAL;
     }
 
-    // PRECISO acepta cualquier tipo numérico.
     if (destino == PRECISO) {
         return this == NUM || this == REAL || this == PRECISO;
     }
