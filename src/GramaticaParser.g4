@@ -130,7 +130,7 @@ destinoAsignacion
 */
 
 instruccionImprimir
-    : PAL_PROYECTAR ABRE expresion (SEPARA expresion)* CIERRA
+    : (PAL_PROYECTAR | PAL_PROYECTAR_LINEA) ABRE expresion (SEPARA expresion)* CIERRA
     ;
 
 instruccionCaptar

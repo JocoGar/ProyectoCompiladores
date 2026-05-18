@@ -563,7 +563,11 @@ public class GeneradorIntermedioCpp extends GramaticaParserBaseVisitor<Void> {
                 salida.append(" << ").append(valor);
             }
 
-            salida.append(" << endl;");
+            if (ctx.PAL_PROYECTAR() != null) {
+                salida.append(" << endl;");
+            } else {
+                salida.append(";");
+            }
 
             escribir(salida.toString());
 

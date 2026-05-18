@@ -120,6 +120,9 @@ public class CategoriaToken {
 
             case "PAL_SALTO":
                 return "Literal Especial";
+                
+                case "PAL_PROYECTAR_LINEA":
+    return "Salida sin salto";
 
             default:
                 return "Otros";
@@ -315,6 +318,9 @@ public class CategoriaToken {
 
             case "IDENTIFICADOR":
                 return "identificador / variable / función";
+                
+                case "PAL_PROYECTAR_LINEA":
+    return "mostrar sin salto de línea";
 
             default:
                 return "No aplica";

@@ -12,6 +12,7 @@ PAL_VACIO   : 'empty' ;
 // Asignación / E-S
 PAL_ASIGNA     : 'asigna' ;
 PAL_PROYECTAR  : 'proyectar' ;
+PAL_PROYECTAR_LINEA : 'proyectar_linea' ;
 PAL_CAPTAR     : 'captar' ;
 
 // Condicionales

@@ -494,14 +494,14 @@ public TipoDato visitActualizacion(GramaticaParser.ActualizacionContext ctx) {
         return tipoDevuelto;
     }
 
-    @Override
-    public TipoDato visitInstruccionImprimir(GramaticaParser.InstruccionImprimirContext ctx) {
-        for (GramaticaParser.ExpresionContext expresion : ctx.expresion()) {
-            visit(expresion);
-        }
-
-        return TipoDato.VACIO;
+@Override
+public TipoDato visitInstruccionImprimir(GramaticaParser.InstruccionImprimirContext ctx) {
+    for (GramaticaParser.ExpresionContext expresion : ctx.expresion()) {
+        visit(expresion);
     }
+
+    return TipoDato.VACIO;
+}
     
     @Override
     public TipoDato visitInstruccionCaptar(GramaticaParser.InstruccionCaptarContext ctx) {

@@ -23,6 +23,7 @@ public class EquivalenciaLenguaje {
         // Entrada / salida
         equivalencias.put("proyectar", "cout / print");
         equivalencias.put("captar", "cin / input");
+        equivalencias.put("proyectar_linea", "mostrar sin salto de línea");
 
         // Operadores aritméticos
         equivalencias.put("une", "+");
