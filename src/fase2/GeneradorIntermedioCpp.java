@@ -552,13 +552,23 @@ public class GeneradorIntermedioCpp extends GramaticaParserBaseVisitor<Void> {
         return null;
     }
 
-    @Override
-    public Void visitInstruccionImprimir(GramaticaParser.InstruccionImprimirContext ctx) {
-        String valor = generarExpresion(ctx.expresion());
+        @Override
+        public Void visitInstruccionImprimir(GramaticaParser.InstruccionImprimirContext ctx) {
+            StringBuilder salida = new StringBuilder();
 
-        escribir("cout << " + valor + " << endl;");
-        return null;
-    }
+            salida.append("cout");
+
+            for (GramaticaParser.ExpresionContext expresion : ctx.expresion()) {
+                String valor = generarExpresion(expresion);
+                salida.append(" << ").append(valor);
+            }
+
+            salida.append(" << endl;");
+
+            escribir(salida.toString());
+
+            return null;
+        }
 
     @Override
     public Void visitInstruccionCaptar(GramaticaParser.InstruccionCaptarContext ctx) {

@@ -496,10 +496,13 @@ public TipoDato visitActualizacion(GramaticaParser.ActualizacionContext ctx) {
 
     @Override
     public TipoDato visitInstruccionImprimir(GramaticaParser.InstruccionImprimirContext ctx) {
-        visit(ctx.expresion());
+        for (GramaticaParser.ExpresionContext expresion : ctx.expresion()) {
+            visit(expresion);
+        }
+
         return TipoDato.VACIO;
     }
-
+    
     @Override
     public TipoDato visitInstruccionCaptar(GramaticaParser.InstruccionCaptarContext ctx) {
         visit(ctx.destinoEntrada());
