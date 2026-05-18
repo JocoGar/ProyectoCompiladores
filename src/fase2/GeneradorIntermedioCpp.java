@@ -2,6 +2,7 @@ package fase2;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -41,9 +42,13 @@ public class GeneradorIntermedioCpp extends GramaticaParserBaseVisitor<Void> {
     private StringBuilder cuerpoActual;
     private final List<String> declaracionesActuales;
     private final Set<String> declaradosActuales;
+    private final Set<String> parametrosReferenciaActuales;
 
     private final Map<String, VariableC3D> variablesActuales;
     private final Map<String, VariableC3D> variablesGlobales;
+
+    private final Map<String, String> tiposTemporales;
+    private final Map<String, String> tiposFunciones;
 
     private int temporal;
     private int etiqueta;
@@ -65,9 +70,13 @@ public class GeneradorIntermedioCpp extends GramaticaParserBaseVisitor<Void> {
         this.cuerpoActual = null;
         this.declaracionesActuales = new ArrayList<>();
         this.declaradosActuales = new HashSet<>();
+        this.parametrosReferenciaActuales = new HashSet<>();
 
         this.variablesActuales = new LinkedHashMap<>();
         this.variablesGlobales = new LinkedHashMap<>();
+
+        this.tiposTemporales = new HashMap<>();
+        this.tiposFunciones = new HashMap<>();
 
         this.temporal = 0;
         this.etiqueta = 0;
@@ -95,11 +104,14 @@ public class GeneradorIntermedioCpp extends GramaticaParserBaseVisitor<Void> {
         declaracionesActuales.clear();
         declaradosActuales.clear();
         variablesActuales.clear();
+        parametrosReferenciaActuales.clear();
+        tiposTemporales.clear();
     }
 
     private String finalizarBloque() {
-String cuerpoOptimizado = optimizarCopiasTemporales(cuerpoActual.toString());
-cuerpoOptimizado = optimizarCodigoMuerto(cuerpoOptimizado);
+        String cuerpoOptimizado = optimizarCopiasTemporales(cuerpoActual.toString());
+        cuerpoOptimizado = eliminarGotosConsecutivos(cuerpoOptimizado);
+        cuerpoOptimizado = optimizarCodigoMuerto(cuerpoOptimizado);
 
         StringBuilder salida = new StringBuilder();
 
@@ -121,6 +133,8 @@ cuerpoOptimizado = optimizarCodigoMuerto(cuerpoOptimizado);
         declaracionesActuales.clear();
         declaradosActuales.clear();
         variablesActuales.clear();
+        parametrosReferenciaActuales.clear();
+        tiposTemporales.clear();
 
         return salida.toString();
     }
@@ -176,11 +190,12 @@ cuerpoOptimizado = optimizarCodigoMuerto(cuerpoOptimizado);
     }
 
     private String nuevoTemporal() {
-        return nuevoTemporalTipo("double");
+        return nuevoTemporalTipo("int");
     }
 
     private String nuevoTemporalTipo(String tipoCpp) {
         String t = nuevoNombreTemporal();
+        tiposTemporales.put(t, tipoCpp);
 
         if (procesandoGlobales) {
             declararGlobal(tipoCpp + " " + t + ";", t);
@@ -193,6 +208,7 @@ cuerpoOptimizado = optimizarCodigoMuerto(cuerpoOptimizado);
 
     private String declararTemporalUsuario(String nombreOriginal, String tipoCpp, boolean arreglo, String tamanio) {
         String temp = nuevoNombreTemporal();
+        tiposTemporales.put(temp, tipoCpp);
 
         VariableC3D variable = new VariableC3D(nombreOriginal, temp, tipoCpp, arreglo, tamanio);
 
@@ -221,6 +237,7 @@ cuerpoOptimizado = optimizarCodigoMuerto(cuerpoOptimizado);
 
     private String declararTemporalParametro(String nombreOriginal, String tipoCpp) {
         String temp = nuevoNombreTemporal();
+        tiposTemporales.put(temp, tipoCpp);
 
         VariableC3D variable = new VariableC3D(nombreOriginal, temp, tipoCpp, false, "");
         variablesActuales.put(nombreOriginal, variable);
@@ -299,17 +316,6 @@ cuerpoOptimizado = optimizarCodigoMuerto(cuerpoOptimizado);
             default:
                 return op;
         }
-    }
-
-    private boolean operadorBooleano(String op) {
-        return op.equals(">")
-                || op.equals("<")
-                || op.equals(">=")
-                || op.equals("<=")
-                || op.equals("==")
-                || op.equals("!=")
-                || op.equals("&&")
-                || op.equals("||");
     }
 
     @Override
@@ -394,6 +400,8 @@ cuerpoOptimizado = optimizarCodigoMuerto(cuerpoOptimizado);
         String tipo = tipoCpp(ctx.tipoRetorno().getText());
         String nombre = ctx.IDENTIFICADOR().getText();
 
+        tiposFunciones.put(nombre, tipo);
+
         iniciarBloque();
 
         StringBuilder parametros = new StringBuilder();
@@ -409,6 +417,10 @@ cuerpoOptimizado = optimizarCodigoMuerto(cuerpoOptimizado);
                 String tipoParametro = tipoCpp(p.tipoGeneral().getText());
                 String nombreOriginal = p.IDENTIFICADOR().getText();
                 String tempParametro = declararTemporalParametro(nombreOriginal, tipoParametro);
+
+                if (p.PAL_REFERENCIA() != null) {
+                    parametrosReferenciaActuales.add(tempParametro);
+                }
 
                 parametros.append(tipoParametro);
 
@@ -474,6 +486,7 @@ cuerpoOptimizado = optimizarCodigoMuerto(cuerpoOptimizado);
         }
 
         String temp = nuevoNombreTemporal();
+        tiposTemporales.put(temp, tipo);
 
         VariableC3D variable = new VariableC3D(nombreOriginal, temp, tipo, true, tamanio);
 
@@ -532,7 +545,7 @@ cuerpoOptimizado = optimizarCodigoMuerto(cuerpoOptimizado);
                 break;
         }
 
-        String temp = nuevoTemporal();
+        String temp = nuevoTemporalTipo(tipoDeExpresion(destino));
         escribir(temp + " = " + destino + " " + operador + " " + valor + ";");
         escribir(destino + " = " + temp + ";");
 
@@ -570,7 +583,7 @@ cuerpoOptimizado = optimizarCodigoMuerto(cuerpoOptimizado);
     @Override
     public Void visitActualizacion(GramaticaParser.ActualizacionContext ctx) {
         String destino = destinoAsignacion(ctx.destinoAsignacion());
-        String temp = nuevoTemporal();
+        String temp = nuevoTemporalTipo(tipoDeExpresion(destino));
 
         if (ctx.getText().contains("subir")) {
             escribir(temp + " = " + destino + " + 1;");
@@ -870,7 +883,7 @@ cuerpoOptimizado = optimizarCodigoMuerto(cuerpoOptimizado);
                 if (plegado != null) {
                     izquierda = plegado;
                 } else {
-                    String temp = nuevoTemporal();
+                    String temp = nuevoTemporalTipo("int");
                     escribir(temp + " = (int)" + izquierda + " % (int)" + derecha + ";");
                     izquierda = temp;
                 }
@@ -887,7 +900,7 @@ cuerpoOptimizado = optimizarCodigoMuerto(cuerpoOptimizado);
             String valor = expresionUnaria(ctx.expresionUnaria());
             String op = operadorCpp(ctx.getStart().getText());
 
-            String tipoTemp = op.equals("!") ? "bool" : "double";
+            String tipoTemp = op.equals("!") ? "bool" : tipoDeExpresion(valor);
             String temp = nuevoTemporalTipo(tipoTemp);
 
             escribir(temp + " = " + op + valor + ";");
@@ -1169,7 +1182,7 @@ cuerpoOptimizado = optimizarCodigoMuerto(cuerpoOptimizado);
             return simplificado;
         }
 
-        String tipoTemp = operadorBooleano(operador) ? "bool" : "double";
+        String tipoTemp = tipoResultadoOperacion(operador, izquierda, derecha);
         String temp = nuevoTemporalTipo(tipoTemp);
 
         escribir(temp + " = " + izquierda + " " + operador + " " + derecha + ";");
@@ -1177,93 +1190,204 @@ cuerpoOptimizado = optimizarCodigoMuerto(cuerpoOptimizado);
         return temp;
     }
 
-    private String optimizarCopiasTemporales(String cuerpo) {
-    String[] lineas = cuerpo.split("\\R");
-    boolean[] eliminar = new boolean[lineas.length];
+    private String tipoDeIdentificador(String nombre) {
+        VariableC3D variable = variablesActuales.get(nombre);
 
-    Pattern operacionTemporal = Pattern.compile(
-            "^(t\\d+)\\s*=\\s*(t\\d+|[a-zA-Z_][a-zA-Z0-9_]*|\\d+(?:\\.\\d+)?)\\s*"
-          + "([+\\-*/%]|>=|<=|==|!=|>|<|&&|\\|\\|)\\s*"
-          + "(t\\d+|[a-zA-Z_][a-zA-Z0-9_]*|\\d+(?:\\.\\d+)?);$"
-    );
-
-    Pattern copiaTemporal = Pattern.compile(
-            "^(t\\d+)\\s*=\\s*(t\\d+);$"
-    );
-
-    for (int i = 0; i < lineas.length - 1; i++) {
-        String actual = lineas[i].trim();
-        String siguiente = lineas[i + 1].trim();
-
-        Matcher m1 = operacionTemporal.matcher(actual);
-        if (!m1.find()) {
-            continue;
+        if (variable != null) {
+            return variable.tipoCpp;
         }
 
-        String temporalIntermedio = m1.group(1);
-        String expresion = m1.group(2) + " " + m1.group(3) + " " + m1.group(4);
+        variable = variablesGlobales.get(nombre);
 
-        Matcher m2 = copiaTemporal.matcher(siguiente);
-        if (!m2.find()) {
-            continue;
+        if (variable != null) {
+            return variable.tipoCpp;
         }
 
-        String temporalDestino = m2.group(1);
-        String copiaFuente = m2.group(2);
-
-        if (!copiaFuente.equals(temporalIntermedio)) {
-            continue;
-        }
-
-        if (temporalUsadoDespues(lineas, temporalIntermedio, i + 1)) {
-            continue;
-        }
-
-        lineas[i + 1] = temporalDestino + " = " + expresion + ";";
-        eliminar[i] = true;
-    }
-
-        StringBuilder sb = new StringBuilder();
-
-        for (int i = 0; i < lineas.length; i++) {
-            if (!eliminar[i] && !lineas[i].trim().isEmpty()) {
-                String linea = lineas[i].trim();
-
-                if (linea.matches("^L\\d+:;?$")) {
-                    sb.append(linea).append("\n");
-                } else {
-                    sb.append("    ").append(linea).append("\n");
-                }
+        for (VariableC3D v : variablesActuales.values()) {
+            if (v.temporal.equals(nombre)) {
+                return v.tipoCpp;
             }
         }
 
+        for (VariableC3D v : variablesGlobales.values()) {
+            if (v.temporal.equals(nombre)) {
+                return v.tipoCpp;
+            }
+        }
+
+        return null;
+    }
+
+    private String tipoDeExpresion(String valor) {
+        if (valor == null || valor.isEmpty()) {
+            return "int";
+        }
+
+        String tipoTemporal = tiposTemporales.get(valor);
+
+        if (tipoTemporal != null) {
+            return tipoTemporal;
+        }
+
+        String tipoIdentificador = tipoDeIdentificador(valor);
+
+        if (tipoIdentificador != null) {
+            return tipoIdentificador;
+        }
+
+        Matcher llamada = Pattern.compile("^([a-zA-Z_][a-zA-Z0-9_]*)\\s*\\(").matcher(valor);
+
+        if (llamada.find()) {
+            return tiposFunciones.getOrDefault(llamada.group(1), "int");
+        }
+
+        if (valor.matches("-?\\d+\\.\\d+")) {
+            return "double";
+        }
+
+        if (valor.matches("-?\\d+")) {
+            return "int";
+        }
+
+        if ("true".equals(valor) || "false".equals(valor)) {
+            return "bool";
+        }
+
+        if (valor.startsWith("\"") && valor.endsWith("\"")) {
+            return "string";
+        }
+
+        if (valor.contains("[")) {
+            String base = valor.substring(0, valor.indexOf('['));
+            return tipoDeExpresion(base);
+        }
+
+        if (valor.contains(".")) {
+            return "int";
+        }
+
+        return "int";
+    }
+
+    private String tipoResultadoOperacion(String operador, String izquierda, String derecha) {
+        if (operador.equals("!")
+                || operador.equals("&&")
+                || operador.equals("||")
+                || operador.equals(">")
+                || operador.equals("<")
+                || operador.equals(">=")
+                || operador.equals("<=")
+                || operador.equals("==")
+                || operador.equals("!=")) {
+            return "bool";
+        }
+
+        if (operador.equals("%")) {
+            return "int";
+        }
+
+        String ti = tipoDeExpresion(izquierda);
+        String td = tipoDeExpresion(derecha);
+
+        if ("double".equals(ti) || "double".equals(td)) {
+            return "double";
+        }
+
+        if ("float".equals(ti) || "float".equals(td)) {
+            return "float";
+        }
+
+        return "int";
+    }
+
+    private String optimizarCopiasTemporales(String cuerpo) {
+        String[] lineas = cuerpo.split("\\R");
+        boolean[] eliminar = new boolean[lineas.length];
+
+        Pattern operacionTemporal = Pattern.compile(
+                "^(t\\d+)\\s*=\\s*(t\\d+|[a-zA-Z_][a-zA-Z0-9_]*|\\d+(?:\\.\\d+)?)\\s*"
+                + "([+\\-*/%]|>=|<=|==|!=|>|<|&&|\\|\\|)\\s*"
+                + "(t\\d+|[a-zA-Z_][a-zA-Z0-9_]*|\\d+(?:\\.\\d+)?);$"
+        );
+
+        Pattern copiaTemporal = Pattern.compile("^(t\\d+)\\s*=\\s*(t\\d+);$");
+
+        for (int i = 0; i < lineas.length - 1; i++) {
+            String actual = lineas[i].trim();
+            String siguiente = lineas[i + 1].trim();
+
+            Matcher m1 = operacionTemporal.matcher(actual);
+
+            if (!m1.find()) {
+                continue;
+            }
+
+            String temporalIntermedio = m1.group(1);
+            String expresion = m1.group(2) + " " + m1.group(3) + " " + m1.group(4);
+
+            Matcher m2 = copiaTemporal.matcher(siguiente);
+
+            if (!m2.find()) {
+                continue;
+            }
+
+            String temporalDestino = m2.group(1);
+            String copiaFuente = m2.group(2);
+
+            if (!copiaFuente.equals(temporalIntermedio)) {
+                continue;
+            }
+
+            if (temporalUsadoDespues(lineas, temporalIntermedio, i + 1)) {
+                continue;
+            }
+
+            lineas[i + 1] = temporalDestino + " = " + expresion + ";";
+            eliminar[i] = true;
+        }
+
+        return reconstruirLineas(lineas, eliminar);
+    }
+
+    private String eliminarGotosConsecutivos(String cuerpo) {
+        String[] lineas = cuerpo.split("\\R");
+        StringBuilder sb = new StringBuilder();
+
+        String anterior = null;
+
+        for (String lineaOriginal : lineas) {
+            String linea = lineaOriginal.trim();
+
+            if (linea.isEmpty()) {
+                continue;
+            }
+
+            if (linea.equals(anterior) && linea.matches("^goto\\s+L\\d+;$")) {
+                continue;
+            }
+
+            if (linea.matches("^L\\d+:;?$")) {
+                sb.append(linea).append("\n");
+            } else {
+                sb.append("    ").append(linea).append("\n");
+            }
+
+            anterior = linea;
+        }
+
         return sb.toString();
-}
-
-private boolean temporalUsadoDespues(String[] lineas, String temporal, int desde) {
-    Pattern p = Pattern.compile("\\b" + Pattern.quote(temporal) + "\\b");
-
-    for (int i = desde + 1; i < lineas.length; i++) {
-        if (p.matcher(lineas[i]).find()) {
-            return true;
-        }
     }
 
-    return false;
-}
-    private String extraerTemporalDeclarado(String declaracion) {
-        Pattern p = Pattern.compile("\\b(t\\d+)\\b");
-        Matcher m = p.matcher(declaracion);
+    private boolean temporalUsadoDespues(String[] lineas, String temporal, int desde) {
+        Pattern p = Pattern.compile("\\b" + Pattern.quote(temporal) + "\\b");
 
-        if (m.find()) {
-            return m.group(1);
+        for (int i = desde + 1; i < lineas.length; i++) {
+            if (p.matcher(lineas[i]).find()) {
+                return true;
+            }
         }
 
-        return "";
-    }
-
-    private boolean apareceTemporal(String texto, String temporal) {
-        return Pattern.compile("\\b" + Pattern.quote(temporal) + "\\b").matcher(texto).find();
+        return false;
     }
 
     private String optimizarCodigoMuerto(String cuerpo) {
@@ -1291,6 +1415,10 @@ private boolean temporalUsadoDespues(String[] lineas, String temporal, int desde
                 String destino = m.group(1);
                 String derecha = m.group(2);
 
+                if (parametrosReferenciaActuales.contains(destino)) {
+                    continue;
+                }
+
                 if (tieneEfectoLateral(derecha)) {
                     continue;
                 }
@@ -1315,6 +1443,10 @@ private boolean temporalUsadoDespues(String[] lineas, String temporal, int desde
             }
         } while (cambio);
 
+        return reconstruirLineas(lineas, eliminar);
+    }
+
+    private String reconstruirLineas(String[] lineas, boolean[] eliminar) {
         StringBuilder sb = new StringBuilder();
 
         for (int i = 0; i < lineas.length; i++) {
@@ -1332,10 +1464,26 @@ private boolean temporalUsadoDespues(String[] lineas, String temporal, int desde
         return sb.toString();
     }
 
+    private String extraerTemporalDeclarado(String declaracion) {
+        Pattern p = Pattern.compile("\\b(t\\d+)\\b");
+        Matcher m = p.matcher(declaracion);
+
+        if (m.find()) {
+            return m.group(1);
+        }
+
+        return "";
+    }
+
+    private boolean apareceTemporal(String texto, String temporal) {
+        return Pattern.compile("\\b" + Pattern.quote(temporal) + "\\b").matcher(texto).find();
+    }
+
     private boolean tieneEfectoLateral(String derecha) {
-        return derecha.contains("cin")
-                || derecha.contains("cout")
-                || derecha.contains("call")
-                || derecha.contains("return");
+        if (derecha.contains("cin") || derecha.contains("cout") || derecha.contains("return")) {
+            return true;
+        }
+
+        return Pattern.compile("\\b[a-zA-Z_][a-zA-Z0-9_]*\\s*\\(").matcher(derecha).find();
     }
 }
