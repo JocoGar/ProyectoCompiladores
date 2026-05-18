@@ -12,6 +12,7 @@ public enum TipoDato {
     TEXTO,
     ESTADO,
     VACIO,
+    REGISTRO,
     ERROR;
 
     public static TipoDato desdeTexto(String texto) {
@@ -35,7 +36,7 @@ public enum TipoDato {
             case "empty":
                 return VACIO;
             default:
-                return ERROR;
+                return REGISTRO;
         }
     }
 
@@ -52,22 +53,21 @@ public boolean compatibleCon(TipoDato destino) {
         return true;
     }
 
-    // NUM es entero. No acepta REAL ni PRECISO.
     if (destino == NUM) {
         return this == NUM;
     }
 
-    // REAL acepta enteros y reales, pero no preciso si quieres evitar pérdida de precisión.
     if (destino == REAL) {
         return this == NUM || this == REAL;
     }
 
-    // PRECISO acepta cualquier tipo numérico.
     if (destino == PRECISO) {
         return this == NUM || this == REAL || this == PRECISO;
     }
 
-    // Los demás tipos no tienen conversión implícita.
+    if (this == REGISTRO && destino == REGISTRO) {
+    return true;
+}
     return false;
 }
     public static TipoDato dominanteNumerico(TipoDato a, TipoDato b) {
@@ -106,6 +106,8 @@ public boolean compatibleCon(TipoDato destino) {
                 return "bool";
             case VACIO:
                 return "void";
+            case REGISTRO:
+                return "auto";
             default:
                 return "auto";
         }

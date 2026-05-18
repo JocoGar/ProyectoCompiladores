@@ -6,7 +6,7 @@ package fase2;
 
 /**
  *
- * @author 1jose
+ * @author 1jose.
  */
 
 import java.util.ArrayList;
@@ -14,7 +14,7 @@ import java.util.List;
 import lexerparser.GramaticaParser;
 import lexerparser.GramaticaParserBaseVisitor;
 import org.antlr.v4.runtime.Token;
-import proyectocompilador.ErrorInfo;
+import proyectocompilador.*;
 
 public class AnalizadorSemantico extends GramaticaParserBaseVisitor<TipoDato> {
 
@@ -58,6 +58,9 @@ public class AnalizadorSemantico extends GramaticaParserBaseVisitor<TipoDato> {
         return TipoDato.desdeTexto(ctx.getText());
     }
 
+    private TipoDato tipoGeneral(GramaticaParser.TipoGeneralContext ctx) {
+    return TipoDato.desdeTexto(ctx.getText());
+    }
     private TipoDato tipoRetorno(GramaticaParser.TipoRetornoContext ctx) {
         return TipoDato.desdeTexto(ctx.getText());
     }
@@ -96,7 +99,7 @@ public class AnalizadorSemantico extends GramaticaParserBaseVisitor<TipoDato> {
 
         if (ctx.parametros() != null) {
             for (GramaticaParser.ParametroContext p : ctx.parametros().parametro()) {
-                funcion.agregarParametro(tipoVariable(p.tipoVariable()));
+                funcion.agregarParametro(tipoGeneral(p.tipoGeneral()));
             }
         }
 
@@ -123,7 +126,7 @@ public class AnalizadorSemantico extends GramaticaParserBaseVisitor<TipoDato> {
             for (GramaticaParser.ParametroContext p : ctx.parametros().parametro()) {
                 Token tokenParam = p.IDENTIFICADOR().getSymbol();
                 String nombreParam = tokenParam.getText();
-                TipoDato tipoParam = tipoVariable(p.tipoVariable());
+                TipoDato tipoParam = tipoGeneral(p.tipoGeneral());
 
                 Simbolo parametro = new Simbolo(
                         nombreParam,
@@ -162,7 +165,7 @@ public class AnalizadorSemantico extends GramaticaParserBaseVisitor<TipoDato> {
     public TipoDato visitDeclaracionVariable(GramaticaParser.DeclaracionVariableContext ctx) {
         Token tokenId = ctx.IDENTIFICADOR().getSymbol();
         String nombre = tokenId.getText();
-        TipoDato tipo = tipoVariable(ctx.tipoVariable());
+        TipoDato tipo = tipoGeneral(ctx.tipoGeneral());
 
         Simbolo simbolo = new Simbolo(
                 nombre,
@@ -178,15 +181,17 @@ public class AnalizadorSemantico extends GramaticaParserBaseVisitor<TipoDato> {
             agregarError(tokenId, nombre, "La variable '" + nombre + "' ya fue declarada en este ámbito.");
         }
 
-            if (ctx.expresion() != null) {
-        simbolo.setValor(textoLegible(ctx.expresion().getText()));
+        if (ctx.expresion() != null) {
+            simbolo.setValor(textoLegible(ctx.expresion().getText()));
 
-        TipoDato tipoExpresion = visit(ctx.expresion());
+            TipoDato tipoExpresion = visit(ctx.expresion());
 
-        if (!tipoExpresion.compatibleCon(tipo)) {
-            agregarError(tokenId, nombre, "No se puede asignar una expresión de tipo " + tipoExpresion + " a la variable '" + nombre + "' de tipo " + tipo + ".");
-        }
+            if (!tipoExpresion.compatibleCon(tipo)) {
+                agregarError(tokenId, nombre, "No se puede asignar una expresión de tipo " + tipoExpresion + " a la variable '" + nombre + "' de tipo " + tipo + ".");
             }
+        } else if (ctx.inicializadorLista() != null) {
+            simbolo.setValor(textoLegible(ctx.inicializadorLista().getText()));
+        }
 
         return TipoDato.VACIO;
     }
@@ -195,7 +200,7 @@ public class AnalizadorSemantico extends GramaticaParserBaseVisitor<TipoDato> {
     public TipoDato visitDeclaracionArreglo(GramaticaParser.DeclaracionArregloContext ctx) {
         Token tokenId = ctx.IDENTIFICADOR().getSymbol();
         String nombre = tokenId.getText();
-        TipoDato tipo = tipoVariable(ctx.tipoVariable());
+        TipoDato tipo = tipoGeneral(ctx.tipoGeneral());
 
         Simbolo simbolo = new Simbolo(
                 nombre,
@@ -208,8 +213,15 @@ public class AnalizadorSemantico extends GramaticaParserBaseVisitor<TipoDato> {
         );
 
         try {
-            int tamanio = Integer.parseInt(ctx.NUMERO().getText());
-            simbolo.setTamanioArreglo(tamanio);
+                int tamanio = 0;
+
+                if (ctx.NUMERO() != null) {
+                    tamanio = Integer.parseInt(ctx.NUMERO().getText());
+                } else if (ctx.inicializadorLista() != null) {
+                    tamanio = ctx.inicializadorLista().expresion().size();
+                }
+
+                simbolo.setTamanioArreglo(tamanio);
 
             if (tamanio <= 0) {
                 agregarError(ctx.NUMERO().getSymbol(), ctx.NUMERO().getText(), "El tamaño del arreglo debe ser mayor que cero.");
@@ -225,72 +237,74 @@ public class AnalizadorSemantico extends GramaticaParserBaseVisitor<TipoDato> {
         return TipoDato.VACIO;
     }
 
-    @Override
-    public TipoDato visitAsignacion(GramaticaParser.AsignacionContext ctx) {
-        Token tokenId = ctx.IDENTIFICADOR().getSymbol();
-        String nombre = tokenId.getText();
+@Override
+public TipoDato visitAsignacion(GramaticaParser.AsignacionContext ctx) {
+    Token tokenId = obtenerTokenBase(ctx.destinoAsignacion());
+    String nombre = tokenId.getText();
 
-        Simbolo simbolo = tabla.buscar(nombre);
+    Simbolo simbolo = tabla.buscar(nombre);
 
-        if (simbolo == null) {
-            agregarError(tokenId, nombre, "La variable '" + nombre + "' no ha sido declarada.");
-            visit(ctx.expresion());
-            return TipoDato.ERROR;
-        }
-
-        if (simbolo.getRol().equals("función")) {
-            agregarError(tokenId, nombre, "No se puede asignar un valor directamente a una función.");
-            return TipoDato.ERROR;
-        }
-
-        if (simbolo.getRol().equals("arreglo")) {
-            agregarError(tokenId, nombre, "El identificador '" + nombre + "' es un arreglo. Debes indicar una posición.");
-            return TipoDato.ERROR;
-        }
-
-        simbolo.incrementarUso();
-        simbolo.setValor(textoLegible(ctx.expresion().getText()));
-
-        TipoDato tipoExpresion = visit(ctx.expresion());
-
-        if (!tipoExpresion.compatibleCon(simbolo.getTipo())) {
-            agregarError(tokenId, nombre, "No se puede asignar una expresión de tipo " + tipoExpresion + " a la variable '" + nombre + "' de tipo " + simbolo.getTipo() + ".");
-        }
-
-        return TipoDato.VACIO;
+    if (simbolo == null) {
+        agregarError(tokenId, nombre, "El identificador '" + nombre + "' no ha sido declarado.");
+        visit(ctx.expresion());
+        return TipoDato.ERROR;
     }
 
-    @Override
-    public TipoDato visitAsignacionArreglo(GramaticaParser.AsignacionArregloContext ctx) {
-        TipoDato tipoArreglo = visit(ctx.accesoArreglo());
-        TipoDato tipoExpresion = visit(ctx.expresion());
+    simbolo.incrementarUso();
+    simbolo.setValor(textoLegible(ctx.expresion().getText()));
 
-        Token token = ctx.accesoArreglo().IDENTIFICADOR().getSymbol();
-        String nombre = token.getText();
+    TipoDato tipoDestino = tipoDestinoAsignacion(ctx.destinoAsignacion());
+    TipoDato tipoExpresion = visit(ctx.expresion());
 
-        Simbolo simbolo = tabla.buscar(nombre);
-
-        if (simbolo != null) {
-            String indice = textoLegible(ctx.accesoArreglo().expresion().getText());
-            String valor = textoLegible(ctx.expresion().getText());
-
-            simbolo.setValor("[" + indice + "] = " + valor);
-        }
-
-        if (!tipoExpresion.compatibleCon(tipoArreglo)) {
-            agregarError(
-                    token,
-                    token.getText(),
-                    "El valor asignado al arreglo no es compatible. Se esperaba "
-                    + tipoArreglo
-                    + " y se recibió "
-                    + tipoExpresion
-                    + "."
-            );
-        }
-
-        return TipoDato.VACIO;
+    if (!tipoExpresion.compatibleCon(tipoDestino)) {
+        agregarError(
+                tokenId,
+                nombre,
+                "No se puede asignar una expresión de tipo "
+                + tipoExpresion
+                + " al destino de tipo "
+                + tipoDestino
+                + "."
+        );
     }
+
+    return TipoDato.VACIO;
+}
+
+@Override
+public TipoDato visitAsignacionCompuesta(GramaticaParser.AsignacionCompuestaContext ctx) {
+    Token tokenId = obtenerTokenBase(ctx.destinoAsignacion());
+    String nombre = tokenId.getText();
+
+    Simbolo simbolo = tabla.buscar(nombre);
+
+    if (simbolo == null) {
+        agregarError(tokenId, nombre, "El identificador '" + nombre + "' no ha sido declarado.");
+        visit(ctx.expresion());
+        return TipoDato.ERROR;
+    }
+
+    TipoDato tipoDestino = tipoDestinoAsignacion(ctx.destinoAsignacion());
+
+    if (!tipoDestino.esNumerico() && tipoDestino != TipoDato.ERROR) {
+        agregarError(tokenId, nombre, "La asignación compuesta solo puede aplicarse a valores numéricos.");
+        visit(ctx.expresion());
+        return TipoDato.ERROR;
+    }
+
+    TipoDato tipoExpresion = visit(ctx.expresion());
+
+    if (!tipoExpresion.esNumerico() && tipoExpresion != TipoDato.ERROR) {
+        agregarError(tokenId, nombre, "La expresión usada en asignación compuesta debe ser numérica.");
+        return TipoDato.ERROR;
+    }
+
+    simbolo.incrementarUso();
+    simbolo.setValor(textoLegible(ctx.getText()));
+
+    return TipoDato.VACIO;
+}  
+        
 
     @Override
     public TipoDato visitAccesoArreglo(GramaticaParser.AccesoArregloContext ctx) {
@@ -319,32 +333,53 @@ public class AnalizadorSemantico extends GramaticaParserBaseVisitor<TipoDato> {
           simbolo.incrementarUso();
         return simbolo.getTipo();
     }
-
+    
     @Override
-    public TipoDato visitActualizacion(GramaticaParser.ActualizacionContext ctx) {
-        Token tokenId = ctx.IDENTIFICADOR().getSymbol();
-        String nombre = tokenId.getText();
+public TipoDato visitAccesoCampo(GramaticaParser.AccesoCampoContext ctx) {
+    Token tokenId = ctx.IDENTIFICADOR(0).getSymbol();
+    String nombre = tokenId.getText();
 
-        Simbolo simbolo = tabla.buscar(nombre);
+    Simbolo simbolo = tabla.buscar(nombre);
 
-        if (simbolo == null) {
-            agregarError(tokenId, nombre, "La variable '" + nombre + "' no ha sido declarada.");
-            return TipoDato.ERROR;
-        }
-
-        if (!simbolo.getTipo().esNumerico()) {
-            agregarError(tokenId, nombre, "Solo se puede usar subir/bajar con variables numéricas.");
-            return TipoDato.ERROR;
-        }
-simbolo.incrementarUso();
-
-if (ctx.getText().contains("subir")) {
-    simbolo.setValor(nombre + " subir");
-} else {
-    simbolo.setValor(nombre + " bajar");
-}
-        return TipoDato.VACIO;
+    if (simbolo == null) {
+        agregarError(tokenId, nombre, "El registro '" + nombre + "' no ha sido declarado.");
+        return TipoDato.ERROR;
     }
+
+    simbolo.incrementarUso();
+
+    return TipoDato.NUM;
+}
+
+@Override
+public TipoDato visitActualizacion(GramaticaParser.ActualizacionContext ctx) {
+    Token tokenId = obtenerTokenBase(ctx.destinoAsignacion());
+    String nombre = tokenId.getText();
+
+    Simbolo simbolo = tabla.buscar(nombre);
+
+    if (simbolo == null) {
+        agregarError(tokenId, nombre, "El identificador '" + nombre + "' no ha sido declarado.");
+        return TipoDato.ERROR;
+    }
+
+    TipoDato tipoDestino = tipoDestinoAsignacion(ctx.destinoAsignacion());
+
+    if (!tipoDestino.esNumerico() && tipoDestino != TipoDato.ERROR) {
+        agregarError(tokenId, nombre, "Solo se puede usar subir/bajar con valores numéricos.");
+        return TipoDato.ERROR;
+    }
+
+    simbolo.incrementarUso();
+
+    if (ctx.getText().contains("subir")) {
+        simbolo.setValor(textoLegible(ctx.destinoAsignacion().getText()) + " subir");
+    } else {
+        simbolo.setValor(textoLegible(ctx.destinoAsignacion().getText()) + " bajar");
+    }
+
+    return TipoDato.VACIO;
+}
 
     @Override
     public TipoDato visitDeclaracionPara(GramaticaParser.DeclaracionParaContext ctx) {
@@ -473,29 +508,25 @@ if (ctx.getText().contains("subir")) {
 
     @Override
     public TipoDato visitDestinoEntrada(GramaticaParser.DestinoEntradaContext ctx) {
-        if (ctx.IDENTIFICADOR() != null) {
-            Token tokenId = ctx.IDENTIFICADOR().getSymbol();
-            String nombre = tokenId.getText();
+        Token tokenId = obtenerTokenBase(ctx.destinoAsignacion());
+        String nombre = tokenId.getText();
 
-            Simbolo simbolo = tabla.buscar(nombre);
+        Simbolo simbolo = tabla.buscar(nombre);
 
-            if (simbolo == null) {
-                agregarError(tokenId, nombre, "La variable '" + nombre + "' no ha sido declarada.");
-                return TipoDato.ERROR;
-            }
-
-            if (simbolo.getRol().equals("función")) {
-                agregarError(tokenId, nombre, "No se puede capturar entrada directamente en una función.");
-                return TipoDato.ERROR;
-            }
-
-            simbolo.incrementarUso();
-            simbolo.setValor("entrada_usuario");
-
-            return simbolo.getTipo();
+        if (simbolo == null) {
+            agregarError(tokenId, nombre, "El identificador '" + nombre + "' no ha sido declarado.");
+            return TipoDato.ERROR;
         }
 
-        return visit(ctx.accesoArreglo());
+        if (simbolo.getRol().equals("función")) {
+            agregarError(tokenId, nombre, "No se puede capturar entrada directamente en una función.");
+            return TipoDato.ERROR;
+        }
+
+        simbolo.incrementarUso();
+        simbolo.setValor("entrada_usuario");
+
+        return simbolo.getTipo();
     }
 
     @Override
@@ -739,6 +770,10 @@ if (ctx.getText().contains("subir")) {
             return visit(ctx.accesoArreglo());
         }
 
+        if (ctx.accesoCampo() != null) {
+            return visit(ctx.accesoCampo());
+        }
+
         return visit(ctx.literal());
     }
 
@@ -809,5 +844,42 @@ private String textoLegible(String texto) {
             .replace("opuesto", " opuesto ")
             .replaceAll("\\s+", " ")
             .trim();
+}
+private TipoDato tipoDestinoAsignacion(GramaticaParser.DestinoAsignacionContext ctx) {
+    if (ctx.IDENTIFICADOR() != null) {
+        Simbolo simbolo = tabla.buscar(ctx.IDENTIFICADOR().getText());
+
+        if (simbolo == null) {
+            return TipoDato.ERROR;
+        }
+
+        return simbolo.getTipo();
+    }
+
+    if (ctx.accesoArreglo() != null) {
+        return visit(ctx.accesoArreglo());
+    }
+
+    if (ctx.accesoCampo() != null) {
+        return visit(ctx.accesoCampo());
+    }
+
+    return TipoDato.ERROR;
+}
+
+private Token obtenerTokenBase(GramaticaParser.DestinoAsignacionContext ctx) {
+    if (ctx.IDENTIFICADOR() != null) {
+        return ctx.IDENTIFICADOR().getSymbol();
+    }
+
+    if (ctx.accesoArreglo() != null) {
+        return ctx.accesoArreglo().IDENTIFICADOR().getSymbol();
+    }
+
+    if (ctx.accesoCampo() != null) {
+        return ctx.accesoCampo().IDENTIFICADOR(0).getSymbol();
+    }
+
+    return ctx.getStart();
 }
 }

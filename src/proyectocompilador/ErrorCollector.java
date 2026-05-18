@@ -15,27 +15,33 @@ public class ErrorCollector extends BaseErrorListener {
 
     private final List<ErrorInfo> erroresInfo = new ArrayList<>();
 
-    @Override
-    public void syntaxError(
-            Recognizer<?, ?> recognizer,
-            Object offendingSymbol,
-            int line,
-            int charPositionInLine,
-            String msg,
-            RecognitionException e
-    ) {
-        String tipo = obtenerTipoError(recognizer);
-        String lexema = obtenerLexema(offendingSymbol, msg);
-        String mensaje = construirMensajePersonalizado(tipo, lexema, msg);
+@Override
+public void syntaxError(
+        Recognizer<?, ?> recognizer,
+        Object offendingSymbol,
+        int line,
+        int charPositionInLine,
+        String msg,
+        RecognitionException e
+) {
+    String tipo = obtenerTipoError(recognizer);
+    String lexema = obtenerLexema(offendingSymbol, msg);
+    String mensaje = construirMensajePersonalizado(tipo, lexema, msg);
 
-        erroresInfo.add(new ErrorInfo(
-                tipo,
-                line,
-                charPositionInLine,
-                lexema,
-                mensaje
-        ));
-    }
+String equivalencia = construirEquivalenciaError(lexema, msg);
+
+if (!equivalencia.isEmpty()) {
+    mensaje = mensaje + " Equivalencia en C++: " + equivalencia + ".";
+}
+
+    erroresInfo.add(new ErrorInfo(
+            tipo,
+            line,
+            charPositionInLine,
+            lexema,
+            mensaje
+    ));
+}
 
     public List<ErrorInfo> getErroresInfo() {
         return erroresInfo;
@@ -113,13 +119,22 @@ public class ErrorCollector extends BaseErrorListener {
         return "Se encontró un error no identificado durante el análisis.";
     }
 
-    private String construirErrorLexico(String lexema) {
-        if (lexema == null || lexema.trim().isEmpty() || "No identificado".equals(lexema)) {
-            return "Se encontró un símbolo no válido en el código fuente.";
-        }
-
-        return "El símbolo '" + lexema + "' no pertenece al lenguaje definido.";
+private String construirErrorLexico(String lexema) {
+    if (lexema == null || lexema.trim().isEmpty() || "No identificado".equals(lexema)) {
+        return "Se encontró un símbolo no válido en el código fuente.";
     }
+
+    String sugerencia = sugerirPalabraDelLenguaje(lexema);
+
+    if (!sugerencia.isEmpty()) {
+        return "El símbolo '" + lexema + "' no pertenece al lenguaje definido. "
+                + "En este lenguaje debes usar '" + sugerencia + "' en lugar de '" + lexema + "'. "
+                + "Equivalencia C++: " + sugerencia + " → " + lexema + ".";
+    }
+
+    return "El símbolo '" + lexema + "' no pertenece al lenguaje definido. "
+            + "Verifica si intentaste usar directamente un símbolo de C++ en lugar de la palabra reservada del lenguaje.";
+}
 
 private String construirErrorSintactico(String lexema, String msg) {
     if (lexema == null || lexema.trim().isEmpty()) {
@@ -263,5 +278,101 @@ private boolean esperaba(String msg, String esperado) {
 
     return parteEsperada.contains("'" + esperadoLower + "'")
             || parteEsperada.contains(esperadoLower);
+}
+
+private String sugerirPalabraDelLenguaje(String simboloCpp) {
+    if (simboloCpp == null) {
+        return "";
+    }
+
+    switch (simboloCpp) {
+        case "+":
+            return "une";
+        case "-":
+            return "quita";
+        case "*":
+            return "veces";
+        case "/":
+            return "reparte";
+        case "%":
+            return "sobra";
+        case "=":
+            return "asigna";
+        case ">":
+            return "supera";
+        case "<":
+            return "bajo";
+        case ">=":
+            return "minimo";
+        case "<=":
+            return "tope";
+        case "==":
+            return "calca";
+        case "!=":
+            return "ajeno";
+        case "&&":
+            return "vinculo";
+        case "||":
+            return "opcion";
+        case "!":
+            return "opuesto";
+        case "++":
+            return "subir";
+        case "--":
+            return "bajar";
+        case "{":
+            return "contiene";
+        case "}":
+            return "listo";
+        case ";":
+            return "hecho";
+        case "(":
+            return "abre";
+        case ")":
+            return "cierra";
+        case ",":
+            return "separa";
+        case "[":
+            return "inicio_poncho";
+        case "]":
+            return "fin_poncho";
+        case ":":
+            return "entonces";
+        case "\"":
+            return "cadena / fin_cadena";
+            case ".":
+            return "campo";
+        case "+=":
+            return "aumenta";
+        case "-=":
+            return "reduce";
+        case "*=":
+            return "escala";
+        case "/=":
+            return "divide";
+        case "&":
+            return "referencia";
+        default:
+            return "";
+    }
+}
+private String construirEquivalenciaError(String lexema, String msgOriginalAntlr) {
+    String faltante = obtenerElementoFaltante(msgOriginalAntlr);
+
+    if (faltante != null && !faltante.trim().isEmpty()) {
+        String equivalenciaFaltante = EquivalenciaLenguaje.obtener(faltante);
+
+        if (!equivalenciaFaltante.isEmpty()) {
+            return equivalenciaFaltante;
+        }
+    }
+
+    String equivalenciaLexema = EquivalenciaLenguaje.obtener(lexema);
+
+    if (!equivalenciaLexema.isEmpty()) {
+        return equivalenciaLexema;
+    }
+
+    return "";
 }
 }

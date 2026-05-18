@@ -62,7 +62,7 @@ public class VistaPrincipal extends javax.swing.JFrame {
     private DefaultTableModel crearModeloErrores() {
         return new DefaultTableModel(
                 new Object[][]{},
-                new String[]{"Tipo", "Línea", "Columna", "Lexema", "Mensaje"}
+                new String[]{"Tipo", "Línea", "Columna", "Lexema", "Mensaje", "Equivalencia C++"}
         );
     }
 
@@ -91,21 +91,22 @@ private void mostrarTokens(ResultadoCompilacion resultado) {
     tablaTokens.setModel(modelo);
 }
 
-    private void mostrarErrores(ResultadoCompilacion resultado) {
-        DefaultTableModel modelo = crearModeloErrores();
+private void mostrarErrores(ResultadoCompilacion resultado) {
+    DefaultTableModel modelo = crearModeloErrores();
 
-        for (ErrorInfo error : resultado.getErrores()) {
-            modelo.addRow(new Object[]{
-                error.getTipo(),
-                error.getLinea(),
-                error.getColumna(),
-                error.getLexema(),
-                error.getMensaje()
-            });
-        }
-
-        tablaErrores.setModel(modelo);
+    for (ErrorInfo error : resultado.getErrores()) {
+        modelo.addRow(new Object[]{
+            error.getTipo(),
+            error.getLinea(),
+            error.getColumna(),
+            error.getLexema(),
+            error.getMensaje(),
+            error.getEquivalenciaCpp()
+        });
     }
+
+    tablaErrores.setModel(modelo);
+}
 
     private void mostrarMensajeFinal(ResultadoCompilacion resultado) {
         if (resultado.tieneErrores()) {

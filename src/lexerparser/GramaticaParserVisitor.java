@@ -17,6 +17,24 @@ public interface GramaticaParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitPrograma(GramaticaParser.ProgramaContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link GramaticaParser#seccionRegistros}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitSeccionRegistros(GramaticaParser.SeccionRegistrosContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link GramaticaParser#declaracionRegistro}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitDeclaracionRegistro(GramaticaParser.DeclaracionRegistroContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link GramaticaParser#campoRegistro}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitCampoRegistro(GramaticaParser.CampoRegistroContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link GramaticaParser#seccionGlobales}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -95,17 +113,29 @@ public interface GramaticaParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitDeclaracionArreglo(GramaticaParser.DeclaracionArregloContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link GramaticaParser#inicializadorLista}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitInicializadorLista(GramaticaParser.InicializadorListaContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link GramaticaParser#asignacion}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	T visitAsignacion(GramaticaParser.AsignacionContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link GramaticaParser#asignacionArreglo}.
+	 * Visit a parse tree produced by {@link GramaticaParser#asignacionCompuesta}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitAsignacionArreglo(GramaticaParser.AsignacionArregloContext ctx);
+	T visitAsignacionCompuesta(GramaticaParser.AsignacionCompuestaContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link GramaticaParser#destinoAsignacion}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitDestinoAsignacion(GramaticaParser.DestinoAsignacionContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link GramaticaParser#instruccionImprimir}.
 	 * @param ctx the parse tree
@@ -269,6 +299,12 @@ public interface GramaticaParserVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitExpresionPrimaria(GramaticaParser.ExpresionPrimariaContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link GramaticaParser#accesoCampo}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitAccesoCampo(GramaticaParser.AccesoCampoContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link GramaticaParser#accesoArreglo}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -292,6 +328,12 @@ public interface GramaticaParserVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitTipoVariable(GramaticaParser.TipoVariableContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link GramaticaParser#tipoGeneral}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitTipoGeneral(GramaticaParser.TipoGeneralContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link GramaticaParser#tipoRetorno}.
 	 * @param ctx the parse tree

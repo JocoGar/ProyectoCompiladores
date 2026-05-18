@@ -1,27 +1,39 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package fase2;
-
-/**
- *
- * @author 1jose
- */ 
-
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import lexerparser.GramaticaParser;
 import lexerparser.GramaticaParserBaseVisitor;
 
 public class GeneradorIntermedioCpp extends GramaticaParserBaseVisitor<Void> {
 
+    private static class VariableC3D {
+        String nombreOriginal;
+        String temporal;
+        String tipoCpp;
+        boolean arreglo;
+        String tamanio;
+
+        VariableC3D(String nombreOriginal, String temporal, String tipoCpp, boolean arreglo, String tamanio) {
+            this.nombreOriginal = nombreOriginal;
+            this.temporal = temporal;
+            this.tipoCpp = tipoCpp;
+            this.arreglo = arreglo;
+            this.tamanio = tamanio;
+        }
+    }
+
     private final StringBuilder codigo;
     private final StringBuilder funciones;
+    private final StringBuilder registros;
     private final StringBuilder inicializacionesGlobales;
 
     private final List<String> declaracionesGlobales;
@@ -30,6 +42,13 @@ public class GeneradorIntermedioCpp extends GramaticaParserBaseVisitor<Void> {
     private StringBuilder cuerpoActual;
     private final List<String> declaracionesActuales;
     private final Set<String> declaradosActuales;
+    private final Set<String> parametrosReferenciaActuales;
+
+    private final Map<String, VariableC3D> variablesActuales;
+    private final Map<String, VariableC3D> variablesGlobales;
+
+    private final Map<String, String> tiposTemporales;
+    private final Map<String, String> tiposFunciones;
 
     private int temporal;
     private int etiqueta;
@@ -42,6 +61,7 @@ public class GeneradorIntermedioCpp extends GramaticaParserBaseVisitor<Void> {
     public GeneradorIntermedioCpp() {
         this.codigo = new StringBuilder();
         this.funciones = new StringBuilder();
+        this.registros = new StringBuilder();
         this.inicializacionesGlobales = new StringBuilder();
 
         this.declaracionesGlobales = new ArrayList<>();
@@ -50,6 +70,13 @@ public class GeneradorIntermedioCpp extends GramaticaParserBaseVisitor<Void> {
         this.cuerpoActual = null;
         this.declaracionesActuales = new ArrayList<>();
         this.declaradosActuales = new HashSet<>();
+        this.parametrosReferenciaActuales = new HashSet<>();
+
+        this.variablesActuales = new LinkedHashMap<>();
+        this.variablesGlobales = new LinkedHashMap<>();
+
+        this.tiposTemporales = new HashMap<>();
+        this.tiposFunciones = new HashMap<>();
 
         this.temporal = 0;
         this.etiqueta = 0;
@@ -76,24 +103,38 @@ public class GeneradorIntermedioCpp extends GramaticaParserBaseVisitor<Void> {
         cuerpoActual = new StringBuilder();
         declaracionesActuales.clear();
         declaradosActuales.clear();
+        variablesActuales.clear();
+        parametrosReferenciaActuales.clear();
+        tiposTemporales.clear();
     }
 
     private String finalizarBloque() {
+        String cuerpoOptimizado = optimizarCopiasTemporales(cuerpoActual.toString());
+        cuerpoOptimizado = eliminarGotosConsecutivos(cuerpoOptimizado);
+        cuerpoOptimizado = optimizarCodigoMuerto(cuerpoOptimizado);
+
         StringBuilder salida = new StringBuilder();
 
         for (String declaracion : declaracionesActuales) {
-            salida.append("    ").append(declaracion).append("\n");
+            String temp = extraerTemporalDeclarado(declaracion);
+
+            if (temp.isEmpty() || apareceTemporal(cuerpoOptimizado, temp)) {
+                salida.append("    ").append(declaracion).append("\n");
+            }
         }
 
-        if (!declaracionesActuales.isEmpty()) {
+        if (salida.length() > 0) {
             salida.append("\n");
         }
 
-        salida.append(cuerpoActual);
+        salida.append(cuerpoOptimizado);
 
         cuerpoActual = null;
         declaracionesActuales.clear();
         declaradosActuales.clear();
+        variablesActuales.clear();
+        parametrosReferenciaActuales.clear();
+        tiposTemporales.clear();
 
         return salida.toString();
     }
@@ -143,18 +184,77 @@ public class GeneradorIntermedioCpp extends GramaticaParserBaseVisitor<Void> {
         }
     }
 
-    private String nuevoTemporal() {
+    private String nuevoNombreTemporal() {
         temporal++;
-        String t = "t" + temporal;
+        return "t" + temporal;
+    }
+
+    private String nuevoTemporal() {
+        return nuevoTemporalTipo("int");
+    }
+
+    private String nuevoTemporalTipo(String tipoCpp) {
+        String t = nuevoNombreTemporal();
+        tiposTemporales.put(t, tipoCpp);
 
         if (procesandoGlobales) {
-
-            declaracionesActuales.add("double " + t + ";");
+            declararGlobal(tipoCpp + " " + t + ";", t);
         } else if (cuerpoActual != null) {
-            declarar("double " + t + ";", t);
+            declarar(tipoCpp + " " + t + ";", t);
         }
 
         return t;
+    }
+
+    private String declararTemporalUsuario(String nombreOriginal, String tipoCpp, boolean arreglo, String tamanio) {
+        String temp = nuevoNombreTemporal();
+        tiposTemporales.put(temp, tipoCpp);
+
+        VariableC3D variable = new VariableC3D(nombreOriginal, temp, tipoCpp, arreglo, tamanio);
+
+        if (procesandoGlobales) {
+            variablesGlobales.put(nombreOriginal, variable);
+
+            if (arreglo) {
+                declararGlobal(tipoCpp + " " + temp + "[" + tamanio + "];", temp);
+            } else {
+                declararGlobal(tipoCpp + " " + temp + ";", temp);
+            }
+
+            return temp;
+        }
+
+        variablesActuales.put(nombreOriginal, variable);
+
+        if (arreglo) {
+            declarar(tipoCpp + " " + temp + "[" + tamanio + "];", temp);
+        } else {
+            declarar(tipoCpp + " " + temp + ";", temp);
+        }
+
+        return temp;
+    }
+
+    private String declararTemporalParametro(String nombreOriginal, String tipoCpp) {
+        String temp = nuevoNombreTemporal();
+        tiposTemporales.put(temp, tipoCpp);
+
+        VariableC3D variable = new VariableC3D(nombreOriginal, temp, tipoCpp, false, "");
+        variablesActuales.put(nombreOriginal, variable);
+
+        return temp;
+    }
+
+    private String resolverIdentificador(String nombre) {
+        if (variablesActuales.containsKey(nombre)) {
+            return variablesActuales.get(nombre).temporal;
+        }
+
+        if (variablesGlobales.containsKey(nombre)) {
+            return variablesGlobales.get(nombre).temporal;
+        }
+
+        return nombre;
     }
 
     private String nuevaEtiqueta() {
@@ -179,7 +279,7 @@ public class GeneradorIntermedioCpp extends GramaticaParserBaseVisitor<Void> {
             case "empty":
                 return "void";
             default:
-                return "auto";
+                return tipo;
         }
     }
 
@@ -226,6 +326,14 @@ public class GeneradorIntermedioCpp extends GramaticaParserBaseVisitor<Void> {
 
         codigo.append("// Codigo de tres direcciones\n");
 
+        visit(ctx.seccionRegistros());
+
+        codigo.append(registros);
+
+        if (registros.length() > 0) {
+            codigo.append("\n");
+        }
+
         procesandoGlobales = true;
         iniciarBloque();
         visit(ctx.seccionGlobales());
@@ -251,9 +359,7 @@ public class GeneradorIntermedioCpp extends GramaticaParserBaseVisitor<Void> {
 
         codigo.append("int main() {\n");
 
-
         codigo.append(declaracionesTemporalesGlobales);
-
 
         codigo.append(inicializacionesGlobales);
 
@@ -269,9 +375,34 @@ public class GeneradorIntermedioCpp extends GramaticaParserBaseVisitor<Void> {
     }
 
     @Override
+    public Void visitDeclaracionRegistro(GramaticaParser.DeclaracionRegistroContext ctx) {
+        String nombre = ctx.IDENTIFICADOR().getText();
+
+        registros.append("struct ")
+                .append(nombre)
+                .append(" {\n");
+
+        for (GramaticaParser.CampoRegistroContext campo : ctx.campoRegistro()) {
+            registros.append("    ")
+                    .append(tipoCpp(campo.tipoGeneral().getText()))
+                    .append(" ")
+                    .append(campo.IDENTIFICADOR().getText())
+                    .append(";\n");
+        }
+
+        registros.append("};\n");
+
+        return null;
+    }
+
+    @Override
     public Void visitDeclaracionFuncion(GramaticaParser.DeclaracionFuncionContext ctx) {
         String tipo = tipoCpp(ctx.tipoRetorno().getText());
         String nombre = ctx.IDENTIFICADOR().getText();
+
+        tiposFunciones.put(nombre, tipo);
+
+        iniciarBloque();
 
         StringBuilder parametros = new StringBuilder();
 
@@ -283,13 +414,26 @@ public class GeneradorIntermedioCpp extends GramaticaParserBaseVisitor<Void> {
                     parametros.append(", ");
                 }
 
-                parametros.append(tipoCpp(p.tipoVariable().getText()))
-                        .append(" ")
-                        .append(p.IDENTIFICADOR().getText());
+                String tipoParametro = tipoCpp(p.tipoGeneral().getText());
+                String nombreOriginal = p.IDENTIFICADOR().getText();
+                String tempParametro = declararTemporalParametro(nombreOriginal, tipoParametro);
+
+                if (p.PAL_REFERENCIA() != null) {
+                    parametrosReferenciaActuales.add(tempParametro);
+                }
+
+                parametros.append(tipoParametro);
+
+                if (p.PAL_REFERENCIA() != null) {
+                    parametros.append(" &");
+                } else {
+                    parametros.append(" ");
+                }
+
+                parametros.append(tempParametro);
             }
         }
 
-        iniciarBloque();
         visit(ctx.bloque());
         String cuerpoFuncion = finalizarBloque();
 
@@ -313,25 +457,16 @@ public class GeneradorIntermedioCpp extends GramaticaParserBaseVisitor<Void> {
 
     @Override
     public Void visitDeclaracionVariable(GramaticaParser.DeclaracionVariableContext ctx) {
-        String tipo = tipoCpp(ctx.tipoVariable().getText());
-        String nombre = ctx.IDENTIFICADOR().getText();
+        String tipo = tipoCpp(ctx.tipoGeneral().getText());
+        String nombreOriginal = ctx.IDENTIFICADOR().getText();
 
-        if (procesandoGlobales) {
-            declararGlobal(tipo + " " + nombre + ";", nombre);
-
-            if (ctx.expresion() != null) {
-                String valor = generarExpresion(ctx.expresion());
-                escribir(nombre + " = " + valor + ";");
-            }
-
-            return null;
-        }
-
-        declarar(tipo + " " + nombre + ";", nombre);
+        String temp = declararTemporalUsuario(nombreOriginal, tipo, false, "");
 
         if (ctx.expresion() != null) {
             String valor = generarExpresion(ctx.expresion());
-            escribir(nombre + " = " + valor + ";");
+            escribir(temp + " = " + valor + ";");
+        } else if (ctx.inicializadorLista() != null) {
+            escribir(temp + " = " + inicializadorLista(ctx.inicializadorLista()) + ";");
         }
 
         return null;
@@ -339,14 +474,36 @@ public class GeneradorIntermedioCpp extends GramaticaParserBaseVisitor<Void> {
 
     @Override
     public Void visitDeclaracionArreglo(GramaticaParser.DeclaracionArregloContext ctx) {
-        String tipo = tipoCpp(ctx.tipoVariable().getText());
-        String nombre = ctx.IDENTIFICADOR().getText();
-        String tamanio = ctx.NUMERO().getText();
+        String tipo = tipoCpp(ctx.tipoGeneral().getText());
+        String nombreOriginal = ctx.IDENTIFICADOR().getText();
+
+        String tamanio = "";
+
+        if (ctx.NUMERO() != null) {
+            tamanio = ctx.NUMERO().getText();
+        } else if (ctx.inicializadorLista() != null) {
+            tamanio = String.valueOf(ctx.inicializadorLista().expresion().size());
+        }
+
+        String temp = nuevoNombreTemporal();
+        tiposTemporales.put(temp, tipo);
+
+        VariableC3D variable = new VariableC3D(nombreOriginal, temp, tipo, true, tamanio);
+
+        String declaracion = tipo + " " + temp + "[" + tamanio + "]";
+
+        if (ctx.inicializadorLista() != null) {
+            declaracion += " = " + inicializadorLista(ctx.inicializadorLista());
+        }
+
+        declaracion += ";";
 
         if (procesandoGlobales) {
-            declararGlobal(tipo + " " + nombre + "[" + tamanio + "];", nombre);
+            variablesGlobales.put(nombreOriginal, variable);
+            declararGlobal(declaracion, temp);
         } else {
-            declarar(tipo + " " + nombre + "[" + tamanio + "];", nombre);
+            variablesActuales.put(nombreOriginal, variable);
+            declarar(declaracion, temp);
         }
 
         return null;
@@ -354,19 +511,44 @@ public class GeneradorIntermedioCpp extends GramaticaParserBaseVisitor<Void> {
 
     @Override
     public Void visitAsignacion(GramaticaParser.AsignacionContext ctx) {
-        String nombre = ctx.IDENTIFICADOR().getText();
+        String destino = destinoAsignacion(ctx.destinoAsignacion());
         String valor = generarExpresion(ctx.expresion());
 
-        escribir(nombre + " = " + valor + ";");
+        escribir(destino + " = " + valor + ";");
+
         return null;
     }
 
     @Override
-    public Void visitAsignacionArreglo(GramaticaParser.AsignacionArregloContext ctx) {
-        String destino = accesoArreglo(ctx.accesoArreglo());
+    public Void visitAsignacionCompuesta(GramaticaParser.AsignacionCompuestaContext ctx) {
+        String destino = destinoAsignacion(ctx.destinoAsignacion());
         String valor = generarExpresion(ctx.expresion());
+        String operadorOriginal = ctx.getChild(1).getText();
 
-        escribir(destino + " = " + valor + ";");
+        String operador;
+
+        switch (operadorOriginal) {
+            case "aumenta":
+                operador = "+";
+                break;
+            case "reduce":
+                operador = "-";
+                break;
+            case "escala":
+                operador = "*";
+                break;
+            case "divide":
+                operador = "/";
+                break;
+            default:
+                operador = "";
+                break;
+        }
+
+        String temp = nuevoTemporalTipo(tipoDeExpresion(destino));
+        escribir(temp + " = " + destino + " " + operador + " " + valor + ";");
+        escribir(destino + " = " + temp + ";");
+
         return null;
     }
 
@@ -380,13 +562,7 @@ public class GeneradorIntermedioCpp extends GramaticaParserBaseVisitor<Void> {
 
     @Override
     public Void visitInstruccionCaptar(GramaticaParser.InstruccionCaptarContext ctx) {
-        String destino;
-
-        if (ctx.destinoEntrada().IDENTIFICADOR() != null) {
-            destino = ctx.destinoEntrada().IDENTIFICADOR().getText();
-        } else {
-            destino = accesoArreglo(ctx.destinoEntrada().accesoArreglo());
-        }
+        String destino = destinoAsignacion(ctx.destinoEntrada().destinoAsignacion());
 
         escribir("cin >> " + destino + ";");
         return null;
@@ -406,14 +582,16 @@ public class GeneradorIntermedioCpp extends GramaticaParserBaseVisitor<Void> {
 
     @Override
     public Void visitActualizacion(GramaticaParser.ActualizacionContext ctx) {
-        String nombre = ctx.IDENTIFICADOR().getText();
-
+        String destino = destinoAsignacion(ctx.destinoAsignacion());
+        String temp = nuevoTemporalTipo(tipoDeExpresion(destino));
 
         if (ctx.getText().contains("subir")) {
-            escribir(nombre + " = " + nombre + " + 1;");
+            escribir(temp + " = " + destino + " + 1;");
         } else {
-            escribir(nombre + " = " + nombre + " - 1;");
+            escribir(temp + " = " + destino + " - 1;");
         }
+
+        escribir(destino + " = " + temp + ";");
 
         return null;
     }
@@ -557,7 +735,9 @@ public class GeneradorIntermedioCpp extends GramaticaParserBaseVisitor<Void> {
             etiquetasCasos[i] = nuevaEtiqueta();
             String valor = valorCaso(ctx.casoSwitch(i).valorCaso());
 
-            escribir("if (" + evaluado + " == " + valor + ") goto " + etiquetasCasos[i] + ";");
+            String tempCondicion = nuevoTemporalTipo("bool");
+            escribir(tempCondicion + " = " + evaluado + " == " + valor + ";");
+            escribir("if (" + tempCondicion + ") goto " + etiquetasCasos[i] + ";");
         }
 
         escribir("goto " + defecto + ";");
@@ -608,28 +788,41 @@ public class GeneradorIntermedioCpp extends GramaticaParserBaseVisitor<Void> {
             GramaticaParser.DeclaracionParaContext d = ctx.declaracionPara();
 
             String tipo = tipoCpp(d.tipoVariable().getText());
-            String nombre = d.IDENTIFICADOR().getText();
-
-            declarar(tipo + " " + nombre + ";", nombre);
+            String nombreOriginal = d.IDENTIFICADOR().getText();
+            String temp = declararTemporalUsuario(nombreOriginal, tipo, false, "");
 
             if (d.expresion() != null) {
                 String valor = generarExpresion(d.expresion());
-                escribir(nombre + " = " + valor + ";");
+                escribir(temp + " = " + valor + ";");
             }
-        } else {
+
+            return;
+        }
+
+        if (ctx.asignacionSimple() != null) {
             GramaticaParser.AsignacionSimpleContext a = ctx.asignacionSimple();
+            String destino = resolverIdentificador(a.IDENTIFICADOR().getText());
             String valor = generarExpresion(a.expresion());
-            escribir(a.IDENTIFICADOR().getText() + " = " + valor + ";");
+            escribir(destino + " = " + valor + ";");
         }
     }
 
     private void generarActualizacionPara(GramaticaParser.ActualizacionParaContext ctx) {
         if (ctx.actualizacion() != null) {
             visit(ctx.actualizacion());
-        } else {
+            return;
+        }
+
+        if (ctx.asignacionSimple() != null) {
             GramaticaParser.AsignacionSimpleContext a = ctx.asignacionSimple();
+            String destino = resolverIdentificador(a.IDENTIFICADOR().getText());
             String valor = generarExpresion(a.expresion());
-            escribir(a.IDENTIFICADOR().getText() + " = " + valor + ";");
+            escribir(destino + " = " + valor + ";");
+            return;
+        }
+
+        if (ctx.asignacionCompuesta() != null) {
+            visit(ctx.asignacionCompuesta());
         }
     }
 
@@ -643,10 +836,8 @@ public class GeneradorIntermedioCpp extends GramaticaParserBaseVisitor<Void> {
         for (int i = 1; i < ctx.expresionRelacional().size(); i++) {
             String derecha = expresionRelacional(ctx.expresionRelacional(i));
             String op = operadorCpp(ctx.getChild((i * 2) - 1).getText());
-            String t = nuevoTemporal();
 
-            escribir(t + " = " + izquierda + " " + op + " " + derecha + ";");
-            izquierda = t;
+            izquierda = emitirOperacionC3D(izquierda, op, derecha);
         }
 
         return izquierda;
@@ -659,9 +850,7 @@ public class GeneradorIntermedioCpp extends GramaticaParserBaseVisitor<Void> {
             String derecha = expresionAditiva(ctx.expresionAditiva(i));
             String op = operadorCpp(ctx.getChild((i * 2) - 1).getText());
 
-            String t = nuevoTemporal();
-            escribir(t + " = " + izquierda + " " + op + " " + derecha + ";");
-            izquierda = t;
+            izquierda = emitirOperacionC3D(izquierda, op, derecha);
         }
 
         return izquierda;
@@ -673,10 +862,8 @@ public class GeneradorIntermedioCpp extends GramaticaParserBaseVisitor<Void> {
         for (int i = 1; i < ctx.expresionMultiplicativa().size(); i++) {
             String derecha = expresionMultiplicativa(ctx.expresionMultiplicativa(i));
             String op = operadorCpp(ctx.getChild((i * 2) - 1).getText());
-            String t = nuevoTemporal();
 
-            escribir(t + " = " + izquierda + " " + op + " " + derecha + ";");
-            izquierda = t;
+            izquierda = emitirOperacionC3D(izquierda, op, derecha);
         }
 
         return izquierda;
@@ -689,15 +876,20 @@ public class GeneradorIntermedioCpp extends GramaticaParserBaseVisitor<Void> {
             String derecha = expresionUnaria(ctx.expresionUnaria(i));
             String operadorOriginal = ctx.getChild((i * 2) - 1).getText();
             String op = operadorCpp(operadorOriginal);
-            String t = nuevoTemporal();
 
             if (operadorOriginal.equals("sobra")) {
-                escribir(t + " = (int)" + izquierda + " % (int)" + derecha + ";");
-            } else {
-                escribir(t + " = " + izquierda + " " + op + " " + derecha + ";");
-            }
+                String plegado = plegarConstantes(izquierda, "%", derecha);
 
-            izquierda = t;
+                if (plegado != null) {
+                    izquierda = plegado;
+                } else {
+                    String temp = nuevoTemporalTipo("int");
+                    escribir(temp + " = (int)" + izquierda + " % (int)" + derecha + ";");
+                    izquierda = temp;
+                }
+            } else {
+                izquierda = emitirOperacionC3D(izquierda, op, derecha);
+            }
         }
 
         return izquierda;
@@ -708,14 +900,12 @@ public class GeneradorIntermedioCpp extends GramaticaParserBaseVisitor<Void> {
             String valor = expresionUnaria(ctx.expresionUnaria());
             String op = operadorCpp(ctx.getStart().getText());
 
+            String tipoTemp = op.equals("!") ? "bool" : tipoDeExpresion(valor);
+            String temp = nuevoTemporalTipo(tipoTemp);
 
-            if (esValorSimple(valor)) {
-                return op + valor;
-            }
+            escribir(temp + " = " + op + valor + ";");
 
-            String t = nuevoTemporal();
-            escribir(t + " = " + op + valor + ";");
-            return t;
+            return temp;
         }
 
         return expresionPrimaria(ctx.expresionPrimaria());
@@ -727,45 +917,23 @@ public class GeneradorIntermedioCpp extends GramaticaParserBaseVisitor<Void> {
         }
 
         if (ctx.llamadaFuncion() != null) {
-            String t = nuevoTemporal();
-            escribir(t + " = " + llamadaFuncion(ctx.llamadaFuncion()) + ";");
-            return t;
+            return llamadaFuncion(ctx.llamadaFuncion());
         }
 
         if (ctx.accesoArreglo() != null) {
             return accesoArreglo(ctx.accesoArreglo());
         }
 
+        if (ctx.accesoCampo() != null) {
+            return accesoCampo(ctx.accesoCampo());
+        }
+
         return literal(ctx.literal());
-    }
-
-    private boolean esValorSimple(String valor) {
-        if (valor == null || valor.isEmpty()) {
-            return false;
-        }
-
-        if (valor.startsWith("\"") && valor.endsWith("\"")) {
-            return true;
-        }
-
-        if (valor.equals("true") || valor.equals("false")) {
-            return true;
-        }
-
-        if (valor.matches("[a-zA-Z_][a-zA-Z0-9_]*")) {
-            return true;
-        }
-
-        if (valor.matches("[0-9]+(\\.[0-9]+)?")) {
-            return true;
-        }
-
-        return false;
     }
 
     private String literal(GramaticaParser.LiteralContext ctx) {
         if (ctx.IDENTIFICADOR() != null) {
-            return ctx.IDENTIFICADOR().getText();
+            return resolverIdentificador(ctx.IDENTIFICADOR().getText());
         }
 
         if (ctx.NUMERO() != null) {
@@ -784,12 +952,46 @@ public class GeneradorIntermedioCpp extends GramaticaParserBaseVisitor<Void> {
             return "false";
         }
 
+        if (ctx.PAL_SALTO() != null) {
+            return "\"\\n\"";
+        }
+
         return "";
     }
 
     private String accesoArreglo(GramaticaParser.AccesoArregloContext ctx) {
         String indice = generarExpresion(ctx.expresion());
-        return ctx.IDENTIFICADOR().getText() + "[" + indice + "]";
+        String base = resolverIdentificador(ctx.IDENTIFICADOR().getText());
+
+        return base + "[" + indice + "]";
+    }
+
+    private String accesoCampo(GramaticaParser.AccesoCampoContext ctx) {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append(resolverIdentificador(ctx.IDENTIFICADOR(0).getText()));
+
+        for (int i = 1; i < ctx.IDENTIFICADOR().size(); i++) {
+            sb.append(".").append(ctx.IDENTIFICADOR(i).getText());
+        }
+
+        return sb.toString();
+    }
+
+    private String destinoAsignacion(GramaticaParser.DestinoAsignacionContext ctx) {
+        if (ctx.IDENTIFICADOR() != null) {
+            return resolverIdentificador(ctx.IDENTIFICADOR().getText());
+        }
+
+        if (ctx.accesoArreglo() != null) {
+            return accesoArreglo(ctx.accesoArreglo());
+        }
+
+        if (ctx.accesoCampo() != null) {
+            return accesoCampo(ctx.accesoCampo());
+        }
+
+        return "";
     }
 
     private String llamadaFuncion(GramaticaParser.LlamadaFuncionContext ctx) {
@@ -808,6 +1010,7 @@ public class GeneradorIntermedioCpp extends GramaticaParserBaseVisitor<Void> {
         }
 
         sb.append(")");
+
         return sb.toString();
     }
 
@@ -819,6 +1022,7 @@ public class GeneradorIntermedioCpp extends GramaticaParserBaseVisitor<Void> {
         }
 
         contenido = contenido.replace("\\", "\\\\").replace("\"", "\\\"");
+
         return "\"" + contenido + "\"";
     }
 
@@ -840,5 +1044,446 @@ public class GeneradorIntermedioCpp extends GramaticaParserBaseVisitor<Void> {
         }
 
         return "";
+    }
+
+    private String inicializadorLista(GramaticaParser.InicializadorListaContext ctx) {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("{");
+
+        for (int i = 0; i < ctx.expresion().size(); i++) {
+            if (i > 0) {
+                sb.append(", ");
+            }
+
+            sb.append(generarExpresion(ctx.expresion(i)));
+        }
+
+        sb.append("}");
+
+        return sb.toString();
+    }
+
+    private boolean esNumero(String valor) {
+        if (valor == null) {
+            return false;
+        }
+
+        return valor.matches("-?[0-9]+(\\.[0-9]+)?");
+    }
+
+    private boolean esCero(String valor) {
+        return esNumero(valor) && Double.parseDouble(valor) == 0.0;
+    }
+
+    private boolean esUno(String valor) {
+        return esNumero(valor) && Double.parseDouble(valor) == 1.0;
+    }
+
+    private String quitarDecimalSiEntero(double valor) {
+        if (valor == Math.rint(valor)) {
+            return String.valueOf((long) valor);
+        }
+
+        return String.valueOf(valor);
+    }
+
+    private String plegarConstantes(String izquierda, String operador, String derecha) {
+        if (!esNumero(izquierda) || !esNumero(derecha)) {
+            return null;
+        }
+
+        double a = Double.parseDouble(izquierda);
+        double b = Double.parseDouble(derecha);
+
+        switch (operador) {
+            case "+":
+                return quitarDecimalSiEntero(a + b);
+            case "-":
+                return quitarDecimalSiEntero(a - b);
+            case "*":
+                return quitarDecimalSiEntero(a * b);
+            case "/":
+                if (b == 0) {
+                    return null;
+                }
+                return quitarDecimalSiEntero(a / b);
+            case "%":
+                if (b == 0) {
+                    return null;
+                }
+                return quitarDecimalSiEntero((int) a % (int) b);
+            case ">":
+                return a > b ? "true" : "false";
+            case "<":
+                return a < b ? "true" : "false";
+            case ">=":
+                return a >= b ? "true" : "false";
+            case "<=":
+                return a <= b ? "true" : "false";
+            case "==":
+                return a == b ? "true" : "false";
+            case "!=":
+                return a != b ? "true" : "false";
+            default:
+                return null;
+        }
+    }
+
+    private String simplificarIdentidad(String izquierda, String operador, String derecha) {
+        switch (operador) {
+            case "+":
+                if (esCero(derecha)) {
+                    return izquierda;
+                }
+                if (esCero(izquierda)) {
+                    return derecha;
+                }
+                break;
+
+            case "-":
+                if (esCero(derecha)) {
+                    return izquierda;
+                }
+                break;
+
+            case "*":
+                if (esUno(derecha)) {
+                    return izquierda;
+                }
+                if (esUno(izquierda)) {
+                    return derecha;
+                }
+                if (esCero(derecha) || esCero(izquierda)) {
+                    return "0";
+                }
+                break;
+
+            case "/":
+                if (esUno(derecha)) {
+                    return izquierda;
+                }
+                break;
+        }
+
+        return null;
+    }
+
+    private String emitirOperacionC3D(String izquierda, String operador, String derecha) {
+        String plegado = plegarConstantes(izquierda, operador, derecha);
+
+        if (plegado != null) {
+            return plegado;
+        }
+
+        String simplificado = simplificarIdentidad(izquierda, operador, derecha);
+
+        if (simplificado != null) {
+            return simplificado;
+        }
+
+        String tipoTemp = tipoResultadoOperacion(operador, izquierda, derecha);
+        String temp = nuevoTemporalTipo(tipoTemp);
+
+        escribir(temp + " = " + izquierda + " " + operador + " " + derecha + ";");
+
+        return temp;
+    }
+
+    private String tipoDeIdentificador(String nombre) {
+        VariableC3D variable = variablesActuales.get(nombre);
+
+        if (variable != null) {
+            return variable.tipoCpp;
+        }
+
+        variable = variablesGlobales.get(nombre);
+
+        if (variable != null) {
+            return variable.tipoCpp;
+        }
+
+        for (VariableC3D v : variablesActuales.values()) {
+            if (v.temporal.equals(nombre)) {
+                return v.tipoCpp;
+            }
+        }
+
+        for (VariableC3D v : variablesGlobales.values()) {
+            if (v.temporal.equals(nombre)) {
+                return v.tipoCpp;
+            }
+        }
+
+        return null;
+    }
+
+    private String tipoDeExpresion(String valor) {
+        if (valor == null || valor.isEmpty()) {
+            return "int";
+        }
+
+        String tipoTemporal = tiposTemporales.get(valor);
+
+        if (tipoTemporal != null) {
+            return tipoTemporal;
+        }
+
+        String tipoIdentificador = tipoDeIdentificador(valor);
+
+        if (tipoIdentificador != null) {
+            return tipoIdentificador;
+        }
+
+        Matcher llamada = Pattern.compile("^([a-zA-Z_][a-zA-Z0-9_]*)\\s*\\(").matcher(valor);
+
+        if (llamada.find()) {
+            return tiposFunciones.getOrDefault(llamada.group(1), "int");
+        }
+
+        if (valor.matches("-?\\d+\\.\\d+")) {
+            return "double";
+        }
+
+        if (valor.matches("-?\\d+")) {
+            return "int";
+        }
+
+        if ("true".equals(valor) || "false".equals(valor)) {
+            return "bool";
+        }
+
+        if (valor.startsWith("\"") && valor.endsWith("\"")) {
+            return "string";
+        }
+
+        if (valor.contains("[")) {
+            String base = valor.substring(0, valor.indexOf('['));
+            return tipoDeExpresion(base);
+        }
+
+        if (valor.contains(".")) {
+            return "int";
+        }
+
+        return "int";
+    }
+
+    private String tipoResultadoOperacion(String operador, String izquierda, String derecha) {
+        if (operador.equals("!")
+                || operador.equals("&&")
+                || operador.equals("||")
+                || operador.equals(">")
+                || operador.equals("<")
+                || operador.equals(">=")
+                || operador.equals("<=")
+                || operador.equals("==")
+                || operador.equals("!=")) {
+            return "bool";
+        }
+
+        if (operador.equals("%")) {
+            return "int";
+        }
+
+        String ti = tipoDeExpresion(izquierda);
+        String td = tipoDeExpresion(derecha);
+
+        if ("double".equals(ti) || "double".equals(td)) {
+            return "double";
+        }
+
+        if ("float".equals(ti) || "float".equals(td)) {
+            return "float";
+        }
+
+        return "int";
+    }
+
+    private String optimizarCopiasTemporales(String cuerpo) {
+        String[] lineas = cuerpo.split("\\R");
+        boolean[] eliminar = new boolean[lineas.length];
+
+        Pattern operacionTemporal = Pattern.compile(
+                "^(t\\d+)\\s*=\\s*(t\\d+|[a-zA-Z_][a-zA-Z0-9_]*|\\d+(?:\\.\\d+)?)\\s*"
+                + "([+\\-*/%]|>=|<=|==|!=|>|<|&&|\\|\\|)\\s*"
+                + "(t\\d+|[a-zA-Z_][a-zA-Z0-9_]*|\\d+(?:\\.\\d+)?);$"
+        );
+
+        Pattern copiaTemporal = Pattern.compile("^(t\\d+)\\s*=\\s*(t\\d+);$");
+
+        for (int i = 0; i < lineas.length - 1; i++) {
+            String actual = lineas[i].trim();
+            String siguiente = lineas[i + 1].trim();
+
+            Matcher m1 = operacionTemporal.matcher(actual);
+
+            if (!m1.find()) {
+                continue;
+            }
+
+            String temporalIntermedio = m1.group(1);
+            String expresion = m1.group(2) + " " + m1.group(3) + " " + m1.group(4);
+
+            Matcher m2 = copiaTemporal.matcher(siguiente);
+
+            if (!m2.find()) {
+                continue;
+            }
+
+            String temporalDestino = m2.group(1);
+            String copiaFuente = m2.group(2);
+
+            if (!copiaFuente.equals(temporalIntermedio)) {
+                continue;
+            }
+
+            if (temporalUsadoDespues(lineas, temporalIntermedio, i + 1)) {
+                continue;
+            }
+
+            lineas[i + 1] = temporalDestino + " = " + expresion + ";";
+            eliminar[i] = true;
+        }
+
+        return reconstruirLineas(lineas, eliminar);
+    }
+
+    private String eliminarGotosConsecutivos(String cuerpo) {
+        String[] lineas = cuerpo.split("\\R");
+        StringBuilder sb = new StringBuilder();
+
+        String anterior = null;
+
+        for (String lineaOriginal : lineas) {
+            String linea = lineaOriginal.trim();
+
+            if (linea.isEmpty()) {
+                continue;
+            }
+
+            if (linea.equals(anterior) && linea.matches("^goto\\s+L\\d+;$")) {
+                continue;
+            }
+
+            if (linea.matches("^L\\d+:;?$")) {
+                sb.append(linea).append("\n");
+            } else {
+                sb.append("    ").append(linea).append("\n");
+            }
+
+            anterior = linea;
+        }
+
+        return sb.toString();
+    }
+
+    private boolean temporalUsadoDespues(String[] lineas, String temporal, int desde) {
+        Pattern p = Pattern.compile("\\b" + Pattern.quote(temporal) + "\\b");
+
+        for (int i = desde + 1; i < lineas.length; i++) {
+            if (p.matcher(lineas[i]).find()) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private String optimizarCodigoMuerto(String cuerpo) {
+        String[] lineas = cuerpo.split("\\R");
+        boolean[] eliminar = new boolean[lineas.length];
+
+        boolean cambio;
+
+        do {
+            cambio = false;
+
+            for (int i = 0; i < lineas.length; i++) {
+                if (eliminar[i]) {
+                    continue;
+                }
+
+                String linea = lineas[i].trim();
+
+                Matcher m = Pattern.compile("^(t\\d+)\\s*=\\s*(.+);$").matcher(linea);
+
+                if (!m.find()) {
+                    continue;
+                }
+
+                String destino = m.group(1);
+                String derecha = m.group(2);
+
+                if (parametrosReferenciaActuales.contains(destino)) {
+                    continue;
+                }
+
+                if (tieneEfectoLateral(derecha)) {
+                    continue;
+                }
+
+                boolean usadoEnOtraParte = false;
+
+                for (int j = 0; j < lineas.length; j++) {
+                    if (i == j || eliminar[j]) {
+                        continue;
+                    }
+
+                    if (apareceTemporal(lineas[j], destino)) {
+                        usadoEnOtraParte = true;
+                        break;
+                    }
+                }
+
+                if (!usadoEnOtraParte) {
+                    eliminar[i] = true;
+                    cambio = true;
+                }
+            }
+        } while (cambio);
+
+        return reconstruirLineas(lineas, eliminar);
+    }
+
+    private String reconstruirLineas(String[] lineas, boolean[] eliminar) {
+        StringBuilder sb = new StringBuilder();
+
+        for (int i = 0; i < lineas.length; i++) {
+            if (!eliminar[i] && !lineas[i].trim().isEmpty()) {
+                String linea = lineas[i].trim();
+
+                if (linea.matches("^L\\d+:;?$")) {
+                    sb.append(linea).append("\n");
+                } else {
+                    sb.append("    ").append(linea).append("\n");
+                }
+            }
+        }
+
+        return sb.toString();
+    }
+
+    private String extraerTemporalDeclarado(String declaracion) {
+        Pattern p = Pattern.compile("\\b(t\\d+)\\b");
+        Matcher m = p.matcher(declaracion);
+
+        if (m.find()) {
+            return m.group(1);
+        }
+
+        return "";
+    }
+
+    private boolean apareceTemporal(String texto, String temporal) {
+        return Pattern.compile("\\b" + Pattern.quote(temporal) + "\\b").matcher(texto).find();
+    }
+
+    private boolean tieneEfectoLateral(String derecha) {
+        if (derecha.contains("cin") || derecha.contains("cout") || derecha.contains("return")) {
+            return true;
+        }
+
+        return Pattern.compile("\\b[a-zA-Z_][a-zA-Z0-9_]*\\s*\\(").matcher(derecha).find();
     }
 }
