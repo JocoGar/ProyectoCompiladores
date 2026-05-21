@@ -1,5 +1,18 @@
+num contador asigna 2 hecho
+num datos inicio_poncho 3 fin_poncho hecho
+
+num duplicar abre num valor cierra contiene
+num resultado asigna valor veces 2 hecho
+dar resultado hecho
+listo
+
 empty raiz abre cierra contiene
-    num x asigna 5 hecho
-    proyectar abre cadena Hola fin_cadena cierra hecho
-    x asigna 3 une hecho
+num x asigna 5 hecho
+datos inicio_poncho 0 fin_poncho asigna x hecho
+num total asigna duplicar abre datos inicio_poncho 0 fin_poncho cierra hecho
+
+validar abre total supera contador cierra contiene
+proyectar abre total cierra hecho
+listo
+
 listo

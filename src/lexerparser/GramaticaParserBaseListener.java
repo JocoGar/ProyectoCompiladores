@@ -1,8 +1,6 @@
-package proyectocompilador;
-
 // Generated from GramaticaParser.g4 by ANTLR 4.13.2
+package lexerparser;
 
-import proyectocompilador.GramaticaParser;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -26,6 +24,42 @@ public class GramaticaParserBaseListener implements GramaticaParserListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitPrograma(GramaticaParser.ProgramaContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterSeccionRegistros(GramaticaParser.SeccionRegistrosContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitSeccionRegistros(GramaticaParser.SeccionRegistrosContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterDeclaracionRegistro(GramaticaParser.DeclaracionRegistroContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitDeclaracionRegistro(GramaticaParser.DeclaracionRegistroContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterCampoRegistro(GramaticaParser.CampoRegistroContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitCampoRegistro(GramaticaParser.CampoRegistroContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -175,6 +209,30 @@ public class GramaticaParserBaseListener implements GramaticaParserListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterDeclaracionArreglo(GramaticaParser.DeclaracionArregloContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitDeclaracionArreglo(GramaticaParser.DeclaracionArregloContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterInicializadorLista(GramaticaParser.InicializadorListaContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitInicializadorLista(GramaticaParser.InicializadorListaContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterAsignacion(GramaticaParser.AsignacionContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -182,6 +240,30 @@ public class GramaticaParserBaseListener implements GramaticaParserListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitAsignacion(GramaticaParser.AsignacionContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterAsignacionCompuesta(GramaticaParser.AsignacionCompuestaContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitAsignacionCompuesta(GramaticaParser.AsignacionCompuestaContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterDestinoAsignacion(GramaticaParser.DestinoAsignacionContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitDestinoAsignacion(GramaticaParser.DestinoAsignacionContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -206,6 +288,18 @@ public class GramaticaParserBaseListener implements GramaticaParserListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitInstruccionCaptar(GramaticaParser.InstruccionCaptarContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterDestinoEntrada(GramaticaParser.DestinoEntradaContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitDestinoEntrada(GramaticaParser.DestinoEntradaContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -314,6 +408,54 @@ public class GramaticaParserBaseListener implements GramaticaParserListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitActualizacion(GramaticaParser.ActualizacionContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterEstructuraSwitch(GramaticaParser.EstructuraSwitchContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitEstructuraSwitch(GramaticaParser.EstructuraSwitchContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterCasoSwitch(GramaticaParser.CasoSwitchContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitCasoSwitch(GramaticaParser.CasoSwitchContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterDefectoSwitch(GramaticaParser.DefectoSwitchContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitDefectoSwitch(GramaticaParser.DefectoSwitchContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterValorCaso(GramaticaParser.ValorCasoContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitValorCaso(GramaticaParser.ValorCasoContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -451,6 +593,30 @@ public class GramaticaParserBaseListener implements GramaticaParserListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterAccesoCampo(GramaticaParser.AccesoCampoContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitAccesoCampo(GramaticaParser.AccesoCampoContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterAccesoArreglo(GramaticaParser.AccesoArregloContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitAccesoArreglo(GramaticaParser.AccesoArregloContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterLiteral(GramaticaParser.LiteralContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -482,6 +648,18 @@ public class GramaticaParserBaseListener implements GramaticaParserListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitTipoVariable(GramaticaParser.TipoVariableContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterTipoGeneral(GramaticaParser.TipoGeneralContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitTipoGeneral(GramaticaParser.TipoGeneralContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *

@@ -1,9 +1,5 @@
 lexer grammar GramaticaLexer;
 
-/* =========================================================
-   TOKENS DEL LENGUAJE
-   ========================================================= */
-
 // Tipos de datos
 PAL_NUMERO  : 'num' ;
 PAL_REAL    : 'real' ;
@@ -16,6 +12,7 @@ PAL_VACIO   : 'empty' ;
 // Asignación / E-S
 PAL_ASIGNA     : 'asigna' ;
 PAL_PROYECTAR  : 'proyectar' ;
+PAL_PROYECTAR_LINEA : 'proyectar_linea' ;
 PAL_CAPTAR     : 'captar' ;
 
 // Condicionales
@@ -28,9 +25,15 @@ PAL_REPETIR    : 'repetir' ;
 PAL_INICIAR    : 'iniciar' ;
 PAL_LOOP       : 'loop' ;
 
+// Switch / Case
+PAL_LIGHT      : 'light' ;
+PAL_CERRADO    : 'cerrado' ;
+PAL_DEFENSE    : 'defense' ;
+ENTONCES       : 'entonces' ;
+
 // Control de flujo
 PAL_PARAR      : 'parar' ;
-PAL_SALTAR     : 'saltar' ;
+PAL_SALTAR     : 'saltp' ;
 PAL_DAR        : 'dar' ;
 PAL_RAIZ       : 'raiz' ;
 
@@ -62,13 +65,31 @@ PAL_OPUESTO    : 'opuesto' ;
 PAL_SUBIR      : 'subir' ;
 PAL_BAJAR      : 'bajar' ;
 
+// Registros / estructuras
+PAL_REGISTRO   : 'registro' ;
+PAL_CAMPO      : 'campo' ;
+PAL_REFERENCIA : 'referencia' ;
+
+// Asignaciones compuestas
+PAL_AUMENTA    : 'aumenta' ;
+PAL_REDUCE     : 'reduce' ;
+PAL_ESCALA     : 'escala' ;
+PAL_DIVIDE     : 'divide' ;
+
+// Literal especial
+PAL_SALTO      : 'salto' ;
+
 // Delimitadores
 CONTIENE       : 'contiene' ;
 LISTO          : 'listo' ;
 HECHO          : 'hecho' ;
 ABRE           : 'abre' ;
 CIERRA         : 'cierra' ;
-SEPARA          : 'separa' ;
+SEPARA         : 'separa' ;
+
+// Arreglos
+INICIO_PONCHO  : 'inicio_poncho' ;
+FIN_PONCHO     : 'fin_poncho' ;
 
 // Cadenas
 CADENA_INICIO
@@ -98,10 +119,6 @@ WS
     : [ \t\r\n]+ -> skip
     ;
 
-
-/* =========================================================
-   MODO DE CADENA
-   ========================================================= */
 
 mode MODO_CADENA;
 
